@@ -9,7 +9,7 @@ import '../services/db_helper.dart';
 
 class NoteEditor extends StatefulWidget {
   final Note? note; // If null, this is a new note
-  final int? initialFolderId; // Added initialFolderId parameter
+  final int? initialFolderId; // Current folder ID
 
   const NoteEditor({Key? key, this.note, this.initialFolderId}) : super(key: key);
 
@@ -21,7 +21,7 @@ class _NoteEditorState extends State<NoteEditor> {
   final _formKey = GlobalKey<FormState>();
   late String _title;
   late String _content;
-  int? _selectedFolderId; // Changed to int? for folder IDs
+  int? _selectedFolderId; // Selected folder ID
   List<Folder> _folders = [];
   File? _attachedImage;
   final ImagePicker _picker = ImagePicker();
@@ -37,7 +37,7 @@ class _NoteEditorState extends State<NoteEditor> {
     if (widget.note?.attachmentPath != null) {
       _attachedImage = File(widget.note!.attachmentPath!);
     }
-    _loadFolders();
+    _loadFoldersFromDb();
     // Debugging
     print('Note Editor Init: _selectedFolderId = $_selectedFolderId');
   }
@@ -74,6 +74,9 @@ class _NoteEditorState extends State<NoteEditor> {
       if (widget.note?.folderId != null &&
           _folders.any((folder) => folder.id == widget.note!.folderId)) {
         _selectedFolderId = widget.note!.folderId;
+      } else if (widget.initialFolderId != null &&
+          _folders.any((folder) => folder.id == widget.initialFolderId)) {
+        _selectedFolderId = widget.initialFolderId;
       } else {
         _selectedFolderId = null;
       }
@@ -125,58 +128,6 @@ class _NoteEditorState extends State<NoteEditor> {
     setState(() {
       _attachedImage = null;
     });
-  }
-
-  void _loadFolders() async {
-    try {
-      List<Folder> foldersFromDb = await _dbHelper.getFolders();
-
-      // Debugging: Print all fetched folders
-      print('Fetched Folders from DB:');
-      for (var folder in foldersFromDb) {
-        print('Folder ID: ${folder.id}, Name: ${folder.name}');
-      }
-
-      // If no folders exist, insert a default folder
-      if (foldersFromDb.isEmpty) {
-        Folder defaultFolder = Folder(id: null, name: 'Default');
-        await _dbHelper.insertFolder(defaultFolder);
-        foldersFromDb = await _dbHelper.getFolders();
-        print('Inserted default folder.');
-      }
-
-      // Remove duplicate folders based on ID
-      final uniqueFolders = <int, Folder>{};
-      for (var folder in foldersFromDb) {
-        if (folder.id != null && !uniqueFolders.containsKey(folder.id)) {
-          uniqueFolders[folder.id!] = folder;
-        } else {
-          print('Duplicate folder detected with ID: ${folder.id} and Name: ${folder.name}');
-        }
-      }
-
-      _folders = uniqueFolders.values.toList();
-
-      // Debugging: Print folders after removing duplicates
-      print('Unique Folders after processing:');
-      for (var folder in _folders) {
-        print('Folder ID: ${folder.id}, Name: ${folder.name}');
-      }
-
-      // Validate and set _selectedFolderId
-      if (widget.note?.folderId != null &&
-          _folders.any((folder) => folder.id == widget.note!.folderId)) {
-        _selectedFolderId = widget.note!.folderId;
-      } else {
-        _selectedFolderId = null;
-      }
-
-      setState(() {});
-      // Final Debugging
-      print('Final _selectedFolderId after validation: $_selectedFolderId');
-    } catch (e) {
-      print('Error loading folders: $e');
-    }
   }
 
   @override
