@@ -145,18 +145,18 @@ class DBHelper {
     );
   }
 
-  // Delete a folder from the database
+  // Delete a folder and all its associated notes from the database
   Future<int> deleteFolder(int id) async {
     final db = await database;
 
-    // Assign notes to have no folder (null) instead of assigning to "Notes"
-    await db.update(
+    // Delete all notes associated with the folder
+    await db.delete(
       'notes',
-      {'folderId': null},
       where: 'folderId = ?',
       whereArgs: [id],
     );
 
+    // Delete the folder
     return await db.delete(
       'folders',
       where: 'id = ?',

@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Folder?'),
-        content: const Text('This will remove the folder and move its notes to "Notes". Continue?'),
+        content: const Text('This will remove the folder and all the notes inside. Continue?'),
         actions: [
           TextButton(
             onPressed: () async {
