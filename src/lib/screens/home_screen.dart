@@ -1,7 +1,7 @@
 // lib/screens/home_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Add intl package for date formatting
+import 'package:intl/intl.dart';
 import '../models/folder.dart';
 import '../models/note.dart';
 import '../services/db_helper.dart';
@@ -19,10 +19,29 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Folder> _folders = [];
   Folder? _selectedFolder;
 
+  // Search related variables
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(_onSearchChanged);
     _refreshFolderList();
+    _refreshNoteList();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text;
+    });
     _refreshNoteList();
   }
 
@@ -37,6 +56,12 @@ class _HomeScreenState extends State<HomeScreen> {
   // Fetch notes from the database
   void _refreshNoteList() async {
     List<Note> notes = await _dbHelper.getNotes(folderId: _selectedFolder?.id);
+    if (_searchQuery.isNotEmpty) {
+      notes = notes.where((note) {
+        return note.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            note.content.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+    }
     setState(() {
       _notes = notes;
     });
@@ -199,12 +224,12 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           // Drawer Header with Menu Icon to close the drawer
           Container(
-            height: 80.0, // Reduced height to minimize space
-            color: Colors.blue, // Same background color as before
-            padding: const EdgeInsets.symmetric(horizontal: 5.0), // Horizontal padding for spacing
+            height: 80.0,
+            color: Colors.blue,
+            padding: const EdgeInsets.symmetric(horizontal: 5.0),
             child: Column(
               children: [
-                const SizedBox(height: 30.0), // Added space at the top to shift content down
+                const SizedBox(height: 30.0),
                 Row(
                   children: [
                     IconButton(
@@ -218,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Folders',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 20, // Matches the 'Notes' title size
+                        fontSize: 20,
                       ),
                     ),
                   ],
@@ -287,10 +312,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           // Add Folder Button
           ListTile(
-            leading: const Icon(Icons.add, color: Colors.white),
+            leading: const Icon(Icons.add, color: Colors.black),
             title: const Text(
               'Add Folder',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
             onTap: () {
               Navigator.pop(context);
@@ -308,6 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
     DateTime yesterday = today.subtract(const Duration(days: 1));
+
     if (noteTime.isAfter(today)) {
       // Today
       return 'Today, ${DateFormat.jm().format(noteTime)}';
@@ -320,7 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Updated _buildNoteItem with a trash can icon for deletion
+  // Build the note item widget
   Widget _buildNoteItem(Note note) {
     return GestureDetector(
       onTap: () => _navigateToEditor(note: note),
@@ -346,36 +372,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (note.attachmentPath != null && File(note.attachmentPath!).existsSync())
                   Container(
                     height: 100,
-                    width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4.0),
                       image: DecorationImage(
                         image: FileImage(File(note.attachmentPath!)),
                         fit: BoxFit.cover,
                       ),
+                      borderRadius: BorderRadius.circular(8.0),
                     ),
-                  )
-                else
-                  Container(
-                    height: 100,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(4.0),
-                    ),
-                    child: const Icon(Icons.note, size: 50, color: Colors.blue),
                   ),
                 const SizedBox(height: 8.0),
                 Text(
                   note.title,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4.0),
                 Text(
-                  note.content.length > 50 ? '${note.content.substring(0, 50)}...' : note.content,
-                  style: const TextStyle(fontSize: 14, color: Colors.black54),
+                  note.content,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -400,19 +413,57 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Build the UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedFolder?.name ?? 'Notes',
-            style: const TextStyle(color: Colors.white)),
-        backgroundColor: Colors.blue, // Set AppBar background to blue
-        iconTheme: const IconThemeData(color: Colors.white), // Set AppBar icons to white
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search notes',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white54),
+                ),
+                style: const TextStyle(color: Colors.white),
+                cursorColor: Colors.white,
+              )
+            : Text(
+                _selectedFolder?.name ?? 'Notes',
+                style: const TextStyle(color: Colors.white),
+              ),
+        backgroundColor: Colors.blue,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          _isSearching
+              ? IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    setState(() {
+                      _isSearching = false;
+                      _searchQuery = '';
+                      _searchController.clear();
+                      _refreshNoteList();
+                    });
+                  },
+                )
+              : IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    setState(() {
+                      _isSearching = true;
+                    });
+                  },
+                ),
+        ],
       ),
       drawer: _buildDrawer(),
       body: _notes.isEmpty
           ? const Center(
-              child: Text('No notes available. Tap "+" to add a new note.'))
+              child: Text('No notes available. Tap "+" to add a new note.'),
+            )
           : Padding(
               padding: const EdgeInsets.all(8.0),
               child: GridView.builder(
@@ -428,7 +479,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToEditor(),
-        backgroundColor: Colors.blue, // Match FAB color with AppBar
+        backgroundColor: Colors.blue,
         child: const Icon(Icons.add, color: Colors.white),
         tooltip: 'Add Note',
       ),
