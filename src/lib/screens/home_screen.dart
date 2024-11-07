@@ -268,6 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Expanded(
             child: ListView.separated(
+              padding: EdgeInsets.zero, // Remove extra padding
               itemCount: _folders.length,
               separatorBuilder: (context, index) => const Divider(height: 1, color: Colors.grey),
               itemBuilder: (context, index) {

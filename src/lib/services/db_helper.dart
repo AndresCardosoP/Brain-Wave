@@ -38,9 +38,6 @@ class DBHelper {
       )
     ''');
 
-    // Insert the default "Notes" folder
-    await db.insert('folders', {'name': 'Notes'});
-
     await db.execute('''
       CREATE TABLE notes(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -60,12 +57,6 @@ class DBHelper {
       await db.execute('ALTER TABLE notes ADD COLUMN folderId INTEGER;');
       // Add attachmentPath column to notes table
       await db.execute('ALTER TABLE notes ADD COLUMN attachmentPath TEXT;');
-      // Insert the default "Notes" folder if it doesn't exist
-      await db.insert(
-        'folders',
-        {'name': 'Notes'},
-        conflictAlgorithm: ConflictAlgorithm.ignore,
-      );
     }
     // Future migrations can be handled here
   }
@@ -75,16 +66,8 @@ class DBHelper {
   // Insert a new note into the database
   Future<int> insertNote(Note note) async {
     final db = await database;
-    // If no folder is selected, assign to "Notes"
-    int folderId = note.folderId ?? await getDefaultFolderId();
-    Note noteToInsert = Note(
-      folderId: folderId,
-      title: note.title,
-      content: note.content,
-      timestamp: note.timestamp,
-      attachmentPath: note.attachmentPath,
-    );
-    return await db.insert('notes', noteToInsert.toMap());
+    // Allow folderId to be null if not selected
+    return await db.insert('notes', note.toMap());
   }
 
   // Retrieve all notes from the database
@@ -147,19 +130,8 @@ class DBHelper {
   }
 
   // Get the ID of the default "Notes" folder
-  Future<int> getDefaultFolderId() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'folders',
-      where: 'name = ?',
-      whereArgs: ['Notes'],
-    );
-    if (maps.isNotEmpty) {
-      return maps.first['id'];
-    } else {
-      // If "Notes" folder doesn't exist, create it
-      return await insertFolder(Folder(name: 'Notes'));
-    }
+  Future<int?> getDefaultFolderId() async {
+    return null;
   }
 
   // Update a folder's name
@@ -176,25 +148,15 @@ class DBHelper {
   // Delete a folder from the database
   Future<int> deleteFolder(int id) async {
     final db = await database;
-    // Prevent deleting the default "Notes" folder
-    final List<Map<String, dynamic>> maps = await db.query(
-      'folders',
-      where: 'id = ? AND name = ?',
-      whereArgs: [id, 'Notes'],
-    );
-    if (maps.isNotEmpty) {
-      // Do not allow deletion of "Notes" folder
-      return 0;
-    }
 
-    // Assign notes to "Notes" folder instead of setting to null
-    int defaultFolderId = await getDefaultFolderId();
+    // Assign notes to have no folder (null) instead of assigning to "Notes"
     await db.update(
       'notes',
-      {'folderId': defaultFolderId},
+      {'folderId': null},
       where: 'folderId = ?',
       whereArgs: [id],
     );
+
     return await db.delete(
       'folders',
       where: 'id = ?',

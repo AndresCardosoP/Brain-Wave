@@ -48,17 +48,15 @@ class _NoteEditorState extends State<NoteEditor> {
 
       Note note = Note(
         id: widget.note?.id,
-        folderId: _selectedFolderId,
+        folderId: _selectedFolderId, // This can now be null
         title: _title,
         content: _content,
         timestamp: DateTime.now().toIso8601String(),
       );
 
       if (widget.note == null) {
-        // Insert a new note
         await _dbHelper.insertNote(note);
       } else {
-        // Update an existing note
         await _dbHelper.updateNote(note);
       }
 
