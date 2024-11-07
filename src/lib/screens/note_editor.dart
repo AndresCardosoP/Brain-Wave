@@ -99,7 +99,7 @@ class _NoteEditorState extends State<NoteEditor> {
         folderId: _selectedFolderId, // Use selected folder ID
         title: _title,
         content: _content,
-        timestamp: DateTime.now(),
+        timestamp: DateTime.now().toIso8601String(),
         attachmentPath: _attachedImage?.path,
       );
 

@@ -1,14 +1,16 @@
-// lib/screens/home_screen.dart
+// src/lib/screens/home_screen.dart
 
-import 'package:flutter/material.dart';
 import 'dart:io';
-import '../models/note.dart';
+import 'package:flutter/material.dart';
 import '../models/folder.dart';
+import '../models/note.dart';
 import '../services/db_helper.dart';
 import 'note_editor.dart';
+import 'folder_edit.dart'; // Import the FolderEdit screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -57,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _refreshNoteList();
     }
   }
-  
+
   // Confirm deletion of a note
   void _deleteNoteConfirm(int id) {
     showDialog(
@@ -83,29 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Build the list item for each note
-  Widget _buildNoteItem(Note note) {
-    return ListTile(
-      leading: note.attachmentPath != null
-          ? Image.file(
-              File(note.attachmentPath!),
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-            )
-          : null,
-      title: Text(note.title),
-      subtitle: Text(
-        note.content.length > 50 ? '${note.content.substring(0, 50)}...' : note.content,
-      ),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete, color: Colors.red),
-        onPressed: () => _deleteNoteConfirm(note.id!),
-      ),
-      onTap: () => _navigateToEditor(note: note),
-    );
-  }
-
   // Add a new folder
   void _addFolder() {
     String folderName = '';
@@ -121,7 +100,14 @@ class _HomeScreenState extends State<HomeScreen> {
           TextButton(
             onPressed: () async {
               if (folderName.isNotEmpty) {
-                await _dbHelper.insertFolder(Folder(name: folderName));
+                // Prevent creating a folder named "Notes"
+                if (folderName.trim().toLowerCase() == 'notes') {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Folder name "Notes" is reserved.')),
+                  );
+                  return;
+                }
+                await _dbHelper.insertFolder(Folder(name: folderName.trim()));
                 Navigator.pop(context);
                 _refreshFolderList();
               }
@@ -175,7 +161,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text('Folders', style: TextStyle(fontSize: 24)),
           ),
           ListTile(
-            title: const Text('All Notes'),
+            leading: const Icon(Icons.notes),
+            title: const Text('Notes'), // Renamed from 'All Notes' to 'Notes'
             selected: _selectedFolder == null,
             onTap: () {
               setState(() {
@@ -186,22 +173,33 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               itemCount: _folders.length,
+              separatorBuilder: (context, index) => const Divider(height: 1, color: Colors.grey),
               itemBuilder: (context, index) {
                 Folder folder = _folders[index];
                 return ListTile(
+                  leading: const Icon(Icons.folder, color: Colors.blue),
                   title: Text(folder.name),
                   selected: _selectedFolder?.id == folder.id,
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _deleteFolderConfirm(folder.id!),
-                  ),
                   onTap: () {
                     setState(() {
                       _selectedFolder = folder;
                       Navigator.pop(context);
                       _refreshNoteList();
+                    });
+                  },
+                  onLongPress: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FolderEdit(folder: folder),
+                      ),
+                    ).then((shouldRefresh) {
+                      if (shouldRefresh == true) {
+                        _refreshFolderList();
+                        _refreshNoteList();
+                      }
                     });
                   },
                 );
@@ -221,18 +219,89 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Build the grid item for each note
+  Widget _buildNoteItem(Note note) {
+    return GestureDetector(
+      onTap: () => _navigateToEditor(note: note),
+      onLongPress: () => _deleteNoteConfirm(note.id!),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(8.0),
+          color: Colors.white,
+        ),
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (note.attachmentPath != null)
+              Container(
+                height: 100,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4.0),
+                  image: DecorationImage(
+                    image: FileImage(File(note.attachmentPath!)),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              )
+            else
+              Container(
+                height: 100,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(4.0),
+                ),
+                child: const Icon(Icons.note, size: 50, color: Colors.blue),
+              ),
+            const SizedBox(height: 8.0),
+            Text(
+              note.title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4.0),
+            Text(
+              note.content.length > 50 ? '${note.content.substring(0, 50)}...' : note.content,
+              style: const TextStyle(fontSize: 14, color: Colors.black54),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Text(
+              note.timestamp,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedFolder?.name ?? 'All Notes'),
+        title: Text(_selectedFolder?.name ?? 'Notes'),
       ),
       drawer: _buildDrawer(),
       body: _notes.isEmpty
           ? const Center(child: Text('No notes available. Tap "+" to add a new note.'))
-          : ListView.builder(
-              itemCount: _notes.length,
-              itemBuilder: (context, index) => _buildNoteItem(_notes[index]),
+          : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GridView.builder(
+                itemCount: _notes.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // Number of columns
+                  crossAxisSpacing: 8.0,
+                  mainAxisSpacing: 8.0,
+                  childAspectRatio: 3 / 4, // Width / Height ratio
+                ),
+                itemBuilder: (context, index) => _buildNoteItem(_notes[index]),
+              ),
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToEditor(),
