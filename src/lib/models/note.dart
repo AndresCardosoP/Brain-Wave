@@ -1,4 +1,4 @@
-// src/lib/models/note.dart
+// lib/models/note.dart
 
 class Note {
   final int? id;

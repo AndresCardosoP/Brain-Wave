@@ -1,4 +1,4 @@
-// src/lib/models/folder.dart
+// lib/models/folder.dart
 
 class Folder {
   final int? id;
