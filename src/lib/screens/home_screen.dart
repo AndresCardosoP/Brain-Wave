@@ -1,16 +1,14 @@
-// src/lib/screens/home_screen.dart
-
+// lib/screens/home_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Add intl package for date formatting
 import '../models/folder.dart';
 import '../models/note.dart';
 import '../services/db_helper.dart';
 import 'note_editor.dart';
-import 'folder_edit.dart'; // Import the FolderEdit screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
-
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -123,13 +121,55 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Delete a folder
+  // Rename a folder
+  void _renameFolder(Folder folder) {
+    String newFolderName = folder.name;
+    showDialog(
+      context: context,
+      builder: (context) {
+        final TextEditingController controller = TextEditingController(text: folder.name);
+        return AlertDialog(
+          title: const Text('Rename Folder'),
+          content: TextField(
+            controller: controller,
+            onChanged: (value) => newFolderName = value,
+            decoration: const InputDecoration(hintText: 'Folder Name'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                if (newFolderName.isNotEmpty) {
+                  // Prevent renaming to "Notes"
+                  if (newFolderName.trim().toLowerCase() == 'notes') {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Folder name "Notes" is reserved.')),
+                    );
+                    return;
+                  }
+                  await _dbHelper.updateFolder(Folder(id: folder.id, name: newFolderName.trim()));
+                  Navigator.pop(context);
+                  _refreshFolderList();
+                }
+              },
+              child: const Text('Save'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Confirm deletion of a folder
   void _deleteFolderConfirm(int id) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Folder?'),
-        content: const Text('This will remove the folder and unassign its notes. Continue?'),
+        content: const Text('This will remove the folder and move its notes to "Notes". Continue?'),
         actions: [
           TextButton(
             onPressed: () async {
@@ -157,12 +197,41 @@ class _HomeScreenState extends State<HomeScreen> {
     return Drawer(
       child: Column(
         children: [
-          const DrawerHeader(
-            child: Text('Folders', style: TextStyle(fontSize: 24)),
+          // Drawer Header with Menu Icon to close the drawer
+          Container(
+            height: 80.0, // Reduced height to minimize space
+            color: Colors.blue, // Same background color as before
+            padding: const EdgeInsets.symmetric(horizontal: 5.0), // Horizontal padding for spacing
+            child: Column(
+              children: [
+                const SizedBox(height: 30.0), // Added space at the top to shift content down
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.menu, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pop(context); // Close the drawer
+                      },
+                    ),
+                    const SizedBox(width: 8.0),
+                    const Text(
+                      'Folders',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20, // Matches the 'Notes' title size
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           ListTile(
-            leading: const Icon(Icons.notes),
-            title: const Text('Notes'), // Renamed from 'All Notes' to 'Notes'
+            leading: const Icon(Icons.notes, color: Colors.black),
+            title: const Text(
+              'Notes',
+              style: TextStyle(color: Colors.black),
+            ),
             selected: _selectedFolder == null,
             onTap: () {
               setState(() {
@@ -180,7 +249,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Folder folder = _folders[index];
                 return ListTile(
                   leading: const Icon(Icons.folder, color: Colors.blue),
-                  title: Text(folder.name),
+                  title: Text(
+                    folder.name,
+                    style: const TextStyle(color: Colors.black),
+                  ),
                   selected: _selectedFolder?.id == folder.id,
                   onTap: () {
                     setState(() {
@@ -189,26 +261,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       _refreshNoteList();
                     });
                   },
-                  onLongPress: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => FolderEdit(folder: folder),
-                      ),
-                    ).then((shouldRefresh) {
-                      if (shouldRefresh == true) {
-                        _refreshFolderList();
-                        _refreshNoteList();
+                  trailing: PopupMenuButton<String>(
+                    color: Colors.white,
+                    onSelected: (value) {
+                      if (value == 'rename') {
+                        _renameFolder(folder);
+                      } else if (value == 'delete') {
+                        _deleteFolderConfirm(folder.id!);
                       }
-                    });
-                  },
+                    },
+                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                      const PopupMenuItem<String>(
+                        value: 'rename',
+                        child: Text('Rename', style: TextStyle(color: Colors.black)),
+                      ),
+                      const PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Text('Delete', style: TextStyle(color: Colors.black)),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
           ),
+          // Add Folder Button
           ListTile(
-            leading: const Icon(Icons.add),
-            title: const Text('Add Folder'),
+            leading: const Icon(Icons.add, color: Colors.white),
+            title: const Text(
+              'Add Folder',
+              style: TextStyle(color: Colors.white),
+            ),
             onTap: () {
               Navigator.pop(context);
               _addFolder();
@@ -219,61 +302,97 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Build the grid item for each note
+  // Helper method to format timestamps
+  String _formatTimestamp(String timestamp) {
+    DateTime noteTime = DateTime.parse(timestamp);
+    DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
+    DateTime yesterday = today.subtract(const Duration(days: 1));
+    if (noteTime.isAfter(today)) {
+      // Today
+      return 'Today, ${DateFormat.jm().format(noteTime)}';
+    } else if (noteTime.isAfter(yesterday)) {
+      // Yesterday
+      return 'Yesterday, ${DateFormat.jm().format(noteTime)}';
+    } else {
+      // Older dates
+      return DateFormat.yMMMd().add_jm().format(noteTime);
+    }
+  }
+
+  // Updated _buildNoteItem with a trash can icon for deletion
   Widget _buildNoteItem(Note note) {
     return GestureDetector(
       onTap: () => _navigateToEditor(note: note),
-      onLongPress: () => _deleteNoteConfirm(note.id!),
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(8.0),
           color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade200,
+              blurRadius: 4.0,
+              offset: const Offset(2, 2),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            if (note.attachmentPath != null)
-              Container(
-                height: 100,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(4.0),
-                  image: DecorationImage(
-                    image: FileImage(File(note.attachmentPath!)),
-                    fit: BoxFit.cover,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (note.attachmentPath != null && File(note.attachmentPath!).existsSync())
+                  Container(
+                    height: 100,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4.0),
+                      image: DecorationImage(
+                        image: FileImage(File(note.attachmentPath!)),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                else
+                  Container(
+                    height: 100,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
+                    child: const Icon(Icons.note, size: 50, color: Colors.blue),
                   ),
+                const SizedBox(height: 8.0),
+                Text(
+                  note.title,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              )
-            else
-              Container(
-                height: 100,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(4.0),
+                const SizedBox(height: 4.0),
+                Text(
+                  note.content.length > 50 ? '${note.content.substring(0, 50)}...' : note.content,
+                  style: const TextStyle(fontSize: 14, color: Colors.black54),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: const Icon(Icons.note, size: 50, color: Colors.blue),
+                const Spacer(),
+                Text(
+                  _formatTimestamp(note.timestamp),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            Positioned(
+              bottom: 2.0,
+              right: 2.0,
+              child: GestureDetector(
+                onTap: () => _deleteNoteConfirm(note.id!),
+                child: const Icon(Icons.delete, color: Colors.grey, size: 20),
               ),
-            const SizedBox(height: 8.0),
-            Text(
-              note.title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4.0),
-            Text(
-              note.content.length > 50 ? '${note.content.substring(0, 50)}...' : note.content,
-              style: const TextStyle(fontSize: 14, color: Colors.black54),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const Spacer(),
-            Text(
-              note.timestamp,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),
@@ -285,11 +404,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selectedFolder?.name ?? 'Notes'),
+        title: Text(_selectedFolder?.name ?? 'Notes',
+            style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.blue, // Set AppBar background to blue
+        iconTheme: const IconThemeData(color: Colors.white), // Set AppBar icons to white
       ),
       drawer: _buildDrawer(),
       body: _notes.isEmpty
-          ? const Center(child: Text('No notes available. Tap "+" to add a new note.'))
+          ? const Center(
+              child: Text('No notes available. Tap "+" to add a new note.'))
           : Padding(
               padding: const EdgeInsets.all(8.0),
               child: GridView.builder(
@@ -305,7 +428,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToEditor(),
-        child: const Icon(Icons.add),
+        backgroundColor: Colors.blue, // Match FAB color with AppBar
+        child: const Icon(Icons.add, color: Colors.white),
         tooltip: 'Add Note',
       ),
     );

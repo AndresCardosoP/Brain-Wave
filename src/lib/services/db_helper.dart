@@ -98,7 +98,10 @@ class DBHelper {
         whereArgs: [folderId],
       );
     } else {
-      maps = await db.query('notes');
+      maps = await db.query(
+        'notes',
+        where: 'folderId IS NULL',
+      );
     }
     return List.generate(maps.length, (i) => Note.fromMap(maps[i]));
   }
@@ -129,7 +132,11 @@ class DBHelper {
   // Insert a new folder into the database
   Future<int> insertFolder(Folder folder) async {
     final db = await database;
-    return await db.insert('folders', folder.toMap(), conflictAlgorithm: ConflictAlgorithm.ignore);
+    return await db.insert(
+      'folders',
+      folder.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.ignore,
+    );
   }
 
   // Retrieve all folders from the database
@@ -180,10 +187,11 @@ class DBHelper {
       return 0;
     }
 
-    // Set folderId to null for notes in this folder
+    // Assign notes to "Notes" folder instead of setting to null
+    int defaultFolderId = await getDefaultFolderId();
     await db.update(
       'notes',
-      {'folderId': await getDefaultFolderId()},
+      {'folderId': defaultFolderId},
       where: 'folderId = ?',
       whereArgs: [id],
     );
