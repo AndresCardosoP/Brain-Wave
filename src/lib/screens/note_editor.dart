@@ -1,9 +1,12 @@
 // lib/screens/note_editor.dart
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../services/db_helper.dart';
+import '../services/supabase_service.dart';
+import '../services/constant.dart';
 
 class NoteEditor extends StatefulWidget {
   final Note? note; // If null, this is a new note
@@ -16,13 +19,17 @@ class NoteEditor extends StatefulWidget {
 }
 
 class _NoteEditorState extends State<NoteEditor> {
-  final _formKey = GlobalKey<FormState>();
   final DBHelper _dbHelper = DBHelper();
+  final SupabaseService _supabaseService = SupabaseService();
+  final SupabaseClient _client = Supabase.instance.client;
 
-  String _title = '';
-  String _content = '';
+  final _formKey = GlobalKey<FormState>();
+  late String _title;
+  late String _content;
   int? _selectedFolderId;
+
   List<Folder> _folders = [];
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -33,18 +40,40 @@ class _NoteEditorState extends State<NoteEditor> {
     _loadFoldersFromDb();
   }
 
-  // Load folders from the database
+  // Load folders from Supabase
   void _loadFoldersFromDb() async {
-    List<Folder> foldersFromDb = await _dbHelper.getFolders();
-    setState(() {
-      _folders = foldersFromDb;
-    });
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      context.showErrorMessage('User not authenticated');
+      return;
+    }
+
+    try {
+      List<Folder> foldersFromDb = await _supabaseService.getFolders(user.id);
+      setState(() {
+        _folders = foldersFromDb;
+      });
+    } catch (e) {
+      context.showErrorMessage('Error loading folders: $e');
+    }
   }
 
-  // Save the note to the database
+  // Save the note to both local SQLite and Supabase
   void _saveNote() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      setState(() {
+        _isSaving = true;
+      });
+
+      final user = _client.auth.currentUser;
+      if (user == null) {
+        context.showErrorMessage('User not authenticated');
+        setState(() {
+          _isSaving = false;
+        });
+        return;
+      }
 
       Note note = Note(
         id: widget.note?.id,
@@ -54,26 +83,34 @@ class _NoteEditorState extends State<NoteEditor> {
         timestamp: DateTime.now().toIso8601String(),
       );
 
-      if (widget.note == null) {
-        await _dbHelper.insertNote(note);
-      } else {
-        await _dbHelper.updateNote(note);
+      try {
+        if (widget.note == null) {
+          // Create new note
+          await _supabaseService.insertNote(note, user.id);
+          await _dbHelper.insertLocalNote(note);
+        } else {
+          // Update existing note
+          await _supabaseService.updateNote(note, user.id);
+          await _dbHelper.updateLocalNote(note);
+        }
+        Navigator.pop(context, true); // Indicate that the notes list should refresh
+      } catch (e) {
+        context.showErrorMessage('Error saving note: $e');
+      } finally {
+        setState(() {
+          _isSaving = false;
+        });
       }
-
-      Navigator.pop(context, true); // Indicate that the notes list should refresh
     }
   }
 
-  // Build the UI
   @override
   Widget build(BuildContext context) {
-    // If folders are still loading, show a loading indicator
+    // If still loading folders, show a loading indicator
     if (_folders.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.blue,
-          iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text('Loading...', style: TextStyle(color: Colors.white)),
+          title: const Text('Loading...'),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -81,97 +118,79 @@ class _NoteEditorState extends State<NoteEditor> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: DropdownButtonHideUnderline(
-          child: DropdownButton<int?>(
-            value: _selectedFolderId,
-            dropdownColor: Colors.blue,
-            iconEnabledColor: Colors.white,
-            style: const TextStyle(color: Colors.white, fontSize: 18),
-            items: [
-              DropdownMenuItem<int?>(
-                value: null,
-                child: const Text('No Folder', style: TextStyle(color: Colors.white)),
-              ),
-              ..._folders.map((folder) {
-                return DropdownMenuItem<int?>(
-                  value: folder.id,
-                  child: Text(folder.name, style: const TextStyle(color: Colors.white)),
-                );
-              }).toList(),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _selectedFolderId = value;
-              });
-            },
-          ),
-        ),
+        title: Text(widget.note == null ? 'Create Note' : 'Edit Note'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save, color: Colors.white),
-            onPressed: _saveNote,
+            icon: const Icon(Icons.save),
+            onPressed: _isSaving ? null : _saveNote,
             tooltip: 'Save Note',
           ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            // Title Input
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: TextFormField(
-                initialValue: _title,
-                maxLines: 1,
-                decoration: const InputDecoration(
-                  hintText: 'Title',
-                  border: InputBorder.none,
+      body: _isSaving
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // Title Field
+                    TextFormField(
+                      initialValue: _title,
+                      decoration: const InputDecoration(labelText: 'Title'),
+                      onSaved: (value) => _title = value ?? '',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a title';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // Content Field
+                    Expanded(
+                      child: TextFormField(
+                        initialValue: _content,
+                        decoration: const InputDecoration(labelText: 'Content'),
+                        maxLines: null,
+                        expands: true,
+                        onSaved: (value) => _content = value ?? '',
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter content';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Folder Dropdown
+                    DropdownButtonFormField<int?>(
+                      value: _selectedFolderId,
+                      decoration: const InputDecoration(labelText: 'Folder'),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('Uncategorized'),
+                        ),
+                        ..._folders.map((folder) {
+                          return DropdownMenuItem<int?>(
+                            value: folder.id,
+                            child: Text(folder.name),
+                          );
+                        }).toList(),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedFolderId = value;
+                        });
+                      },
+                    ),
+                  ],
                 ),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                onSaved: (value) => _title = value?.trim() ?? '',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a title';
-                  }
-                  return null;
-                },
               ),
             ),
-            // Divider Line
-            const Divider(
-              color: Colors.grey,
-              height: 1,
-              thickness: 0.5,
-            ),
-            // Content Input
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextFormField(
-                  initialValue: _content,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
-                    hintText: 'Start typing your note...',
-                    border: InputBorder.none,
-                  ),
-                  style: const TextStyle(fontSize: 16),
-                  onSaved: (value) => _content = value?.trim() ?? '',
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter some content';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

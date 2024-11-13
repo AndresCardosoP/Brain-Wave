@@ -6,7 +6,6 @@ class Note {
   final String title;
   final String content;
   final String timestamp;
-  final String? attachmentPath;
 
   Note({
     this.id,
@@ -14,7 +13,6 @@ class Note {
     required this.title,
     required this.content,
     required this.timestamp,
-    this.attachmentPath,
   });
 
   Map<String, dynamic> toMap() {
@@ -24,7 +22,6 @@ class Note {
       'title': title,
       'content': content,
       'timestamp': timestamp,
-      'attachmentPath': attachmentPath,
     };
   }
 
@@ -35,7 +32,6 @@ class Note {
       title: map['title'],
       content: map['content'],
       timestamp: map['timestamp'],
-      attachmentPath: map['attachmentPath'],
     );
   }
 }
