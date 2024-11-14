@@ -1,9 +1,8 @@
-// lib/screens/note_editor.dart
-
 import 'package:flutter/material.dart';
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../services/db_helper.dart';
+import '../services/summarization_service.dart'; // Import Summarization Service
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NoteEditor extends StatefulWidget {
@@ -19,9 +18,12 @@ class NoteEditor extends StatefulWidget {
 class _NoteEditorState extends State<NoteEditor> {
   final _formKey = GlobalKey<FormState>();
   final DBHelper _dbHelper = DBHelper();
+  final SummarizationService _summarizationService = SummarizationService();
 
   String _title = '';
   String _content = '';
+  String _summary = '';
+  bool _isLoadingSummary = false;
   int? _selectedFolderId;
   List<Folder> _folders = [];
 
@@ -45,6 +47,27 @@ class _NoteEditorState extends State<NoteEditor> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading folders: $e')),
       );
+    }
+  }
+
+  // Summarize note content
+  Future<void> _summarizeContent() async {
+    setState(() {
+      _isLoadingSummary = true;
+    });
+    try {
+      final summary = await _summarizationService.summarizeText(_content);
+      setState(() {
+        _summary = summary;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error summarizing content: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoadingSummary = false;
+      });
     }
   }
 
@@ -90,7 +113,6 @@ class _NoteEditorState extends State<NoteEditor> {
   // Build the UI
   @override
   Widget build(BuildContext context) {
-    // If folders are still loading, show a loading indicator
     if (_folders.isEmpty) {
       return Scaffold(
         appBar: AppBar(
@@ -143,7 +165,6 @@ class _NoteEditorState extends State<NoteEditor> {
         key: _formKey,
         child: Column(
           children: [
-            // Title Input
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: TextFormField(
@@ -163,13 +184,7 @@ class _NoteEditorState extends State<NoteEditor> {
                 },
               ),
             ),
-            // Divider Line
-            const Divider(
-              color: Colors.grey,
-              height: 1,
-              thickness: 0.5,
-            ),
-            // Content Input
+            const Divider(color: Colors.grey, height: 1, thickness: 0.5),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -192,6 +207,18 @@ class _NoteEditorState extends State<NoteEditor> {
                 ),
               ),
             ),
+            ElevatedButton(
+              onPressed: _isLoadingSummary ? null : _summarizeContent,
+              child: _isLoadingSummary ? CircularProgressIndicator() : Text('Summarize'),
+            ),
+            if (_summary.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Summary: $_summary',
+                  style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                ),
+              ),
           ],
         ),
       ),
