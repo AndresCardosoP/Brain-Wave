@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../services/db_helper.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NoteEditor extends StatefulWidget {
   final Note? note; // If null, this is a new note
@@ -28,17 +29,23 @@ class _NoteEditorState extends State<NoteEditor> {
   void initState() {
     super.initState();
     _title = widget.note?.title ?? '';
-    _content = widget.note?.content ?? '';
+    _content = widget.note?.body ?? '';
     _selectedFolderId = widget.note?.folderId ?? widget.initialFolderId;
     _loadFoldersFromDb();
   }
 
   // Load folders from the database
   void _loadFoldersFromDb() async {
-    List<Folder> foldersFromDb = await _dbHelper.getFolders();
-    setState(() {
-      _folders = foldersFromDb;
-    });
+    try {
+      List<Folder> foldersFromDb = await _dbHelper.getFolders();
+      setState(() {
+        _folders = foldersFromDb;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading folders: $e')),
+      );
+    }
   }
 
   // Save the note to the database
@@ -46,21 +53,37 @@ class _NoteEditorState extends State<NoteEditor> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      Note note = Note(
-        id: widget.note?.id,
-        folderId: _selectedFolderId, // This can now be null
-        title: _title,
-        content: _content,
-        timestamp: DateTime.now().toIso8601String(),
-      );
-
-      if (widget.note == null) {
-        await _dbHelper.insertNote(note);
-      } else {
-        await _dbHelper.updateNote(note);
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
+        return;
       }
 
-      Navigator.pop(context, true); // Indicate that the notes list should refresh
+      Note note = Note(
+        id: widget.note?.id ?? 0, // Provide a default value for new notes
+        title: _title,
+        body: _content,
+        userId: user.id,
+        folderId: _selectedFolderId,
+        attachmentPath: null, // Adjust if handling attachments
+        createdAt: widget.note?.createdAt ?? DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      try {
+        if (widget.note == null) {
+          await _dbHelper.insertNote(note);
+        } else {
+          await _dbHelper.updateNote(note);
+        }
+        Navigator.pop(context, true);
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving note: $e')),
+        );
+      }
     }
   }
 

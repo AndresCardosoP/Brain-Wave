@@ -1,24 +1,38 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
+import 'utils/constant.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:src/screens/login_page.dart';
+import 'package:src/screens/home_screen.dart';
 
-void main() {
+// import 'package:supabase_quickstart/pages/account_page.dart';
+// import 'package:supabase_quickstart/pages/login_page.dart';
+
+Future<void> main() async {
+  await Supabase.initialize(
+    url: 'https://rphcagdsmtmhjyrqfzmi.supabase.co/',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwaGNhZ2RzbXRtaGp5cnFmem1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1MzY4NzIsImV4cCI6MjA0NzExMjg3Mn0.eeVx9hQOsbebMwMjrI5hjmjK3D6GcKZRsUjGnEcHilI',
+  );
   runApp(const MyApp());
 }
+
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // Root of the application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BrainWave',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const HomeScreen(),
-    );
+        debugShowCheckedModeBanner: false,
+        title: 'Supabase Flutter',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        initialRoute: client.auth.currentSession != null ? '/BrainWave' : '/',
+        routes: {
+          '/': (content) => const LoginPage(),
+          '/home': (content) => const HomeScreen(),
+        });
   }
 }
