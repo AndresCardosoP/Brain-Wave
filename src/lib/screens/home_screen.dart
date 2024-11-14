@@ -1,12 +1,11 @@
 // lib/screens/home_screen.dart
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/folder.dart';
 import '../models/note.dart';
 import '../services/db_helper.dart';
 import 'note_editor.dart';
-import 'package:src/utils/constant.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -25,9 +24,17 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  void _checkAuth() {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      Navigator.pushReplacementNamed(context, '/');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    _checkAuth();
     _searchController.addListener(_onSearchChanged);
     _refreshFolderList();
     _refreshNoteList();
@@ -48,25 +55,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Fetch folders from the database
   void _refreshFolderList() async {
-    List<Folder> folders = await _dbHelper.getFolders();
-    setState(() {
-      _folders = folders;
-    });
+    try {
+      List<Folder> folders = await _dbHelper.getFolders();
+      setState(() {
+        _folders = folders;
+      });
+    } catch (e) {
+      // Handle error (e.g., show a snackbar)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching folders: $e')),
+      );
+    }
   }
 
   // Fetch notes from the database
   void _refreshNoteList() async {
+  try {
     List<Note> notes = await _dbHelper.getNotes(folderId: _selectedFolder?.id);
     if (_searchQuery.isNotEmpty) {
       notes = notes.where((note) {
         return note.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            note.content.toLowerCase().contains(_searchQuery.toLowerCase());
+            note.body.toLowerCase().contains(_searchQuery.toLowerCase());
       }).toList();
     }
     setState(() {
       _notes = notes;
     });
+  } catch (e) {
+    // Handle error (e.g., show a snackbar)
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error fetching notes: $e')),
+    );
   }
+}
 
   // Navigate to the Note Editor to add or edit a note
   void _navigateToEditor({Note? note}) async {
@@ -131,7 +152,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                   return;
                 }
-                await _dbHelper.insertFolder(Folder(name: folderName.trim()));
+                await _dbHelper.insertFolder(Folder(
+                  id: DateTime.now().millisecondsSinceEpoch, // provide a unique id
+                  name: folderName.trim(),
+                  userId: 'your_user_id', // replace with actual user id
+                  createdAt: DateTime.now(),
+                  updatedAt: DateTime.now(),
+                ));
                 Navigator.pop(context);
                 _refreshFolderList();
               }
@@ -172,7 +199,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                     return;
                   }
-                  await _dbHelper.updateFolder(Folder(id: folder.id, name: newFolderName.trim()));
+                  await _dbHelper.updateFolder(Folder(
+                    id: folder.id,
+                    name: newFolderName.trim(),
+                    userId: folder.userId,
+                    createdAt: folder.createdAt,
+                    updatedAt: DateTime.now(),
+                  ));
                   Navigator.pop(context);
                   _refreshFolderList();
                 }
@@ -285,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     setState(() {
                       _selectedFolder = folder;
                       Navigator.pop(context);
-                      _refreshNoteList();
+                      _refreshNoteList(); // Fetch notes for the selected folder
                     });
                   },
                   trailing: PopupMenuButton<String>(
@@ -331,7 +364,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Helper method to format timestamps
   String _formatTimestamp(String timestamp) {
-    DateTime noteTime = DateTime.parse(timestamp);
+    DateTime noteTime = DateTime.parse(timestamp).toLocal(); // Convert to local time
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
     DateTime yesterday = today.subtract(const Duration(days: 1));
@@ -371,12 +404,12 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (note.attachmentPath != null && File(note.attachmentPath!).existsSync())
+                if (note.attachmentPath != null)
                   Container(
                     height: 100,
                     decoration: BoxDecoration(
                       image: DecorationImage(
-                        image: FileImage(File(note.attachmentPath!)),
+                        image: NetworkImage(note.attachmentPath!), // Updated to use NetworkImage
                         fit: BoxFit.cover,
                       ),
                       borderRadius: BorderRadius.circular(8.0),
@@ -390,13 +423,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 4.0),
                 Text(
-                  note.content,
+                  note.body,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const Spacer(),
                 Text(
-                  _formatTimestamp(note.timestamp),
+                  _formatTimestamp(note.updatedAt?.toIso8601String() ?? ''),
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
@@ -459,15 +492,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                   },
                 ),
-          TextButton(
-            onPressed: () {
-              client.auth.signOut();
-              Navigator.pushNamedAndRemoveUntil(
-                context, 
-                '/', 
-                (route) => false);
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.white),
+              onPressed: () {
+                Supabase.instance.client.auth.signOut();
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+              );
             },
-            child: const Text('Log out', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

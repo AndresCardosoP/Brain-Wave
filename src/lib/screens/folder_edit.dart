@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../models/folder.dart';
 import '../services/db_helper.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FolderEdit extends StatefulWidget {
   final Folder folder;
@@ -34,9 +35,28 @@ class _FolderEditState extends State<FolderEdit> {
         );
         return;
       }
-      Folder updatedFolder = Folder(id: widget.folder.id, name: _folderName.trim());
-      await _dbHelper.updateFolder(updatedFolder);
-      Navigator.pop(context, true); // Indicate that a refresh is needed
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
+        return;
+      }
+      Folder updatedFolder = Folder(
+        id: widget.folder.id,
+        name: _folderName.trim(),
+        userId: user.id,
+        createdAt: widget.folder.createdAt,
+        updatedAt: DateTime.now(),
+      );
+      try {
+        await _dbHelper.updateFolder(updatedFolder);
+        Navigator.pop(context, true); // Return true to indicate success
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error renaming folder: $e')),
+        );
+      }
     }
   }
 
@@ -81,37 +101,28 @@ class _FolderEditState extends State<FolderEdit> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Form(
-              key: _formKey,
-              child: TextFormField(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
                 initialValue: _folderName,
-                decoration: const InputDecoration(
-                  labelText: 'Folder Name',
-                  border: OutlineInputBorder(),
-                ),
-                onSaved: (value) => _folderName = value!.trim(),
+                decoration: const InputDecoration(labelText: 'Folder Name'),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Please enter a folder name';
                   }
                   return null;
                 },
+                onSaved: (value) => _folderName = value ?? '',
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _renameFolder,
-              child: const Text('Save Changes'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _deleteFolder,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: const Text('Delete Folder'),
-            ),
-          ],
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _renameFolder,
+                child: const Text('Save'),
+              ),
+            ],
+          ),
         ),
       ),
     );
