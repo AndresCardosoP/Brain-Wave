@@ -6,6 +6,7 @@ import '../models/folder.dart';
 import '../models/note.dart';
 import '../services/db_helper.dart';
 import 'note_editor.dart';
+import 'package:src/utils/constant.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -458,6 +459,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                   },
                 ),
+          TextButton(
+            onPressed: () {
+              client.auth.signOut();
+              Navigator.pushNamedAndRemoveUntil(
+                context, 
+                '/', 
+                (route) => false);
+            },
+            child: const Text('Log out', style: TextStyle(color: Colors.white)),
+          ),
         ],
       ),
       drawer: _buildDrawer(),
