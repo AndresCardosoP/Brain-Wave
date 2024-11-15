@@ -6,9 +6,9 @@ class Note {
   final String body;
   final String userId;
   final int? folderId;
-  final String? attachmentPath;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  bool hasReminder; // Changed from 'final' to mutable
 
   Note({
     this.id,
@@ -16,9 +16,9 @@ class Note {
     required this.body,
     required this.userId,
     this.folderId,
-    this.attachmentPath,
     this.createdAt,
     this.updatedAt,
+    this.hasReminder = false, // Provide default value
   });
 
   factory Note.fromMap(Map<String, dynamic> map) {
@@ -28,9 +28,13 @@ class Note {
       body: map['body'] as String,
       userId: map['user_id'] as String,
       folderId: map['folder_id'] as int?,
-      attachmentPath: map['attachment_path'] as String?,
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at'] as String) : null,
-      updatedAt: map['updated_at'] != null ? DateTime.parse(map['updated_at'] as String) : null,
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'] as String)
+          : null,
+      updatedAt: map['updated_at'] != null
+          ? DateTime.parse(map['updated_at'] as String)
+          : null,
+      hasReminder: map['has_reminder'] as bool? ?? false, // Include hasReminder
     );
   }
 
@@ -40,8 +44,8 @@ class Note {
       'body': body,
       'user_id': userId,
       'folder_id': folderId,
-      'attachment_path': attachmentPath,
       'updated_at': updatedAt?.toIso8601String(),
+      'has_reminder': hasReminder, // Add hasReminder to the map
     };
     if (id != null) {
       map['id'] = id;
