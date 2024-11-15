@@ -43,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
             size: 150,
             color: Colors.blue,
           ),
-          const Text('Login',
+          const Text('BrainWave',
               style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
