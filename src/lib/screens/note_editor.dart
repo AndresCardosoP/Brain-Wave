@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../services/db_helper.dart';
-import '../services/summarization_service.dart'; // Import Summarization Service
+import '../services/summarization_service.dart';
+import '../services/suggestion_service.dart'; // Import Suggestion Service
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NoteEditor extends StatefulWidget {
@@ -19,11 +20,14 @@ class _NoteEditorState extends State<NoteEditor> {
   final _formKey = GlobalKey<FormState>();
   final DBHelper _dbHelper = DBHelper();
   final SummarizationService _summarizationService = SummarizationService();
+  final SuggestionService _suggestionService = SuggestionService();
 
   String _title = '';
   String _content = '';
   String _summary = '';
+  List<String> _suggestions = [];
   bool _isLoadingSummary = false;
+  bool _isLoadingSuggestions = false;
   int? _selectedFolderId;
   List<Folder> _folders = [];
 
@@ -67,6 +71,27 @@ class _NoteEditorState extends State<NoteEditor> {
     } finally {
       setState(() {
         _isLoadingSummary = false;
+      });
+    }
+  }
+
+  // Generate AI suggestions
+  Future<void> _generateSuggestions() async {
+    setState(() {
+      _isLoadingSuggestions = true;
+    });
+    try {
+      final suggestions = await _suggestionService.generateSuggestions(_content);
+      setState(() {
+        _suggestions = suggestions;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error generating suggestions: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoadingSuggestions = false;
       });
     }
   }
@@ -211,6 +236,10 @@ class _NoteEditorState extends State<NoteEditor> {
               onPressed: _isLoadingSummary ? null : _summarizeContent,
               child: _isLoadingSummary ? CircularProgressIndicator() : Text('Summarize'),
             ),
+            ElevatedButton(
+              onPressed: _isLoadingSuggestions ? null : _generateSuggestions,
+              child: _isLoadingSuggestions ? CircularProgressIndicator() : Text('AI Suggestions'),
+            ),
             if (_summary.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -218,6 +247,13 @@ class _NoteEditorState extends State<NoteEditor> {
                   'Summary: $_summary',
                   style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
                 ),
+              ),
+            if (_suggestions.isNotEmpty)
+              ExpansionTile(
+                title: Text('Suggestions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                children: _suggestions.map((suggestion) => ListTile(
+                  title: Text(suggestion),
+                )).toList(),
               ),
           ],
         ),
