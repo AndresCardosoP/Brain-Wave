@@ -1,9 +1,9 @@
-// lib/screens/note_editor.dart
-
 import 'package:flutter/material.dart';
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../services/db_helper.dart';
+import '../services/summarization_service.dart';
+import '../services/suggestion_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NoteEditor extends StatefulWidget {
@@ -19,9 +19,15 @@ class NoteEditor extends StatefulWidget {
 class _NoteEditorState extends State<NoteEditor> {
   final _formKey = GlobalKey<FormState>();
   final DBHelper _dbHelper = DBHelper();
+  final SummarizationService _summarizationService = SummarizationService();
+  final SuggestionService _suggestionService = SuggestionService();
 
   String _title = '';
   String _content = '';
+  String _summary = '';
+  Map<String, dynamic>? _suggestionWithFeedback;
+  bool _isLoadingSummary = false;
+  bool _isLoadingSuggestions = false;
   int? _selectedFolderId;
   List<Folder> _folders = [];
 
@@ -46,6 +52,87 @@ class _NoteEditorState extends State<NoteEditor> {
         SnackBar(content: Text('Error loading folders: $e')),
       );
     }
+  }
+
+  // Summarize note content
+  Future<void> _summarizeContent() async {
+    setState(() {
+      _isLoadingSummary = true;
+    });
+    try {
+      final summary = await _summarizationService.summarizeText(_content);
+      setState(() {
+        _summary = summary;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error summarizing content: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoadingSummary = false;
+      });
+    }
+  }
+
+  // Generate a single AI suggestion
+  Future<void> _generateSuggestions() async {
+    setState(() {
+      _isLoadingSuggestions = true;
+    });
+    try {
+      final suggestions = await _suggestionService.generateSuggestions(_content);
+      final filteredSuggestions = suggestions
+          .skip(1) // Skip the first item if it is the header
+          .where((suggestion) => suggestion.trim().isNotEmpty) // Filter out empty suggestions
+          .toList();
+
+      if (filteredSuggestions.isNotEmpty) {
+        setState(() {
+          _suggestionWithFeedback = {'text': filteredSuggestions.first, 'feedback': null}; // Only one suggestion
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error generating suggestions: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoadingSuggestions = false;
+      });
+    }
+  }
+
+  // Highlight keywords in text
+  List<TextSpan> _highlightKeywords(String text, List<String> keywords) {
+    final spans = <TextSpan>[];
+    int start = 0;
+
+    for (final keyword in keywords) {
+      final lowerKeyword = keyword.toLowerCase();
+      final index = text.toLowerCase().indexOf(lowerKeyword, start);
+
+      if (index == -1) continue;
+
+      // Add normal text before the keyword
+      if (index > start) {
+        spans.add(TextSpan(text: text.substring(start, index), style: TextStyle(color: Colors.black)));
+      }
+
+      // Add highlighted keyword
+      spans.add(TextSpan(
+          text: text.substring(index, index + keyword.length),
+          style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)));
+
+      start = index + keyword.length;
+    }
+
+    // Add the remaining text
+    if (start < text.length) {
+      spans.add(TextSpan(text: text.substring(start), style: TextStyle(color: Colors.black)));
+    }
+
+    return spans;
   }
 
   // Save the note to the database
@@ -90,7 +177,6 @@ class _NoteEditorState extends State<NoteEditor> {
   // Build the UI
   @override
   Widget build(BuildContext context) {
-    // If folders are still loading, show a loading indicator
     if (_folders.isEmpty) {
       return Scaffold(
         appBar: AppBar(
@@ -143,7 +229,6 @@ class _NoteEditorState extends State<NoteEditor> {
         key: _formKey,
         child: Column(
           children: [
-            // Title Input
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: TextFormField(
@@ -163,13 +248,7 @@ class _NoteEditorState extends State<NoteEditor> {
                 },
               ),
             ),
-            // Divider Line
-            const Divider(
-              color: Colors.grey,
-              height: 1,
-              thickness: 0.5,
-            ),
-            // Content Input
+            const Divider(color: Colors.grey, height: 1, thickness: 0.5),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -192,6 +271,59 @@ class _NoteEditorState extends State<NoteEditor> {
                 ),
               ),
             ),
+            ElevatedButton(
+              onPressed: _isLoadingSummary ? null : _summarizeContent,
+              child: _isLoadingSummary ? CircularProgressIndicator() : Text('Summarize'),
+            ),
+            ElevatedButton(
+              onPressed: _isLoadingSuggestions ? null : _generateSuggestions,
+              child: _isLoadingSuggestions ? CircularProgressIndicator() : Text('AI Suggestions'),
+            ),
+            if (_summary.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Summary: $_summary',
+                  style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                ),
+              ),
+            if (_suggestionWithFeedback != null)
+              ExpansionTile(
+                title: Text('Suggestion', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                children: [
+                  ListTile(
+                    title: RichText(
+                      text: TextSpan(
+                        children: _highlightKeywords(
+                          _suggestionWithFeedback!['text'],
+                          ['task', 'project', 'plan'], // Example keywords
+                        ),
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.thumb_up, color: _suggestionWithFeedback!['feedback'] == 'positive' ? Colors.green : Colors.grey),
+                          onPressed: () {
+                            setState(() {
+                              _suggestionWithFeedback!['feedback'] = 'positive';
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.thumb_down, color: _suggestionWithFeedback!['feedback'] == 'negative' ? Colors.red : Colors.grey),
+                          onPressed: () {
+                            setState(() {
+                              _suggestionWithFeedback!['feedback'] = 'negative';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
