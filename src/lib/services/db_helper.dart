@@ -1,12 +1,20 @@
 // src/lib/services/db_helper.dart
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:timezone/data/latest.dart' as tz;
 import '../models/note.dart';
 import '../models/folder.dart';
+import '../models/reminder.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class DBHelper {
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  DBHelper() {
+    tz.initializeTimeZones();
+  }
+
   static final DBHelper _instance = DBHelper._internal();
-  factory DBHelper() => _instance;
+  factory DBHelper.instance() => _instance;
   DBHelper._internal();
 
   final supabase = Supabase.instance.client;
@@ -22,7 +30,7 @@ class DBHelper {
         'body': note.body,
         'user_id': user.id,
         'folder_id': note.folderId,
-        'attachment_path': note.attachmentPath,
+        'has_reminder': note.hasReminder,
       });
     }
   }
@@ -31,9 +39,9 @@ class DBHelper {
   Future<List<Note>> getNotes({int? folderId}) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
-      var query = supabase
+      PostgrestFilterBuilder<PostgrestList> query = supabase
           .from('notes')
-          .select()
+          .select('*')
           .eq('user_id', user.id);
 
       if (folderId != null) {
@@ -56,7 +64,7 @@ class DBHelper {
       'title': note.title,
       'body': note.body,
       'folder_id': note.folderId,
-      'attachment_path': note.attachmentPath,
+      'has_reminder': note.hasReminder,
     }).eq('id', note.id!);
   }
 
@@ -84,7 +92,7 @@ class DBHelper {
     if (user != null) {
       final response = await supabase
           .from('folders')
-          .select()
+          .select('*')
           .eq('user_id', user.id)
           .order('created_at', ascending: false);
 
@@ -109,5 +117,28 @@ class DBHelper {
 
     // Delete the folder
     await supabase.from('folders').delete().eq('id', id);
+  }
+
+  // Reminders CRUD operations
+
+  // Insert a new reminder
+  Future<void> insertReminder(Reminder reminder) async {
+    await supabase.from('reminders').insert(reminder.toMap());
+  }
+
+  // Delete a reminder
+  Future<void> deleteReminder(int noteId) async {
+    await supabase.from('reminders').delete().eq('note_id', noteId);
+  }
+
+  // Check if a reminder exists for a note
+  Future<bool> hasReminder(int noteId) async {
+    final response = await supabase
+        .from('reminders')
+        .select('*')
+        .eq('note_id', noteId)
+        .maybeSingle();
+
+    return response != null;
   }
 }

@@ -6,6 +6,8 @@ import '../models/note.dart';
 import '../services/db_helper.dart';
 import 'note_editor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/reminder.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -23,6 +25,10 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSearching = false;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // Initialize the notifications plugin
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   void _checkAuth() {
     final user = Supabase.instance.client.auth.currentUser;
@@ -70,7 +76,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Fetch notes from the database
   void _refreshNoteList() async {
-  try {
     List<Note> notes = await _dbHelper.getNotes(folderId: _selectedFolder?.id);
     if (_searchQuery.isNotEmpty) {
       notes = notes.where((note) {
@@ -78,16 +83,13 @@ class _HomeScreenState extends State<HomeScreen> {
             note.body.toLowerCase().contains(_searchQuery.toLowerCase());
       }).toList();
     }
+    for (var note in notes) {
+      note.hasReminder = await _dbHelper.hasReminder(note.id!);
+    }
     setState(() {
       _notes = notes;
     });
-  } catch (e) {
-    // Handle error (e.g., show a snackbar)
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error fetching notes: $e')),
-    );
   }
-}
 
   // Navigate to the Note Editor to add or edit a note
   void _navigateToEditor({Note? note}) async {
@@ -327,7 +329,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (value == 'rename') {
                         _renameFolder(folder);
                       } else if (value == 'delete') {
-                        _deleteFolderConfirm(folder.id!);
+                        _deleteFolderConfirm(folder.id);
                       }
                     },
                     itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -404,30 +406,21 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (note.attachmentPath != null)
-                  Container(
-                    height: 100,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(note.attachmentPath!), // Updated to use NetworkImage
-                        fit: BoxFit.cover,
-                      ),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                const SizedBox(height: 8.0),
+                // Removed attachmentPath-related code
                 Text(
                   note.title,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4.0),
-                Text(
-                  note.body,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+                Expanded(
+                  child: Text(
+                    note.body,
+                    maxLines: 5,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 8.0),
                 Text(
                   _formatTimestamp(note.updatedAt?.toIso8601String() ?? ''),
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
@@ -437,15 +430,97 @@ class _HomeScreenState extends State<HomeScreen> {
             Positioned(
               bottom: 2.0,
               right: 2.0,
-              child: GestureDetector(
-                onTap: () => _deleteNoteConfirm(note.id!),
-                child: const Icon(Icons.delete, color: Colors.grey, size: 20),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      Icons.notifications,
+                      color: note.hasReminder ? Colors.blue : Colors.grey,
+                    ),
+                    onPressed: () => _handleReminder(note),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () => _deleteNoteConfirm(note.id!),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _handleReminder(Note note) async {
+    if (note.hasReminder) {
+      // Ask to remove the existing reminder
+      bool confirm = await _showConfirmDialog(
+        'Remove Reminder',
+        'Do you want to remove the existing reminder?',
+      );
+      if (confirm) {
+        await _dbHelper.deleteReminder(note.id!);
+        note.hasReminder = false; // Update the note's hasReminder
+        await _dbHelper.updateNote(note);
+        _refreshNoteList();
+      }
+    } else {
+      // Show DateTime picker to add a new reminder
+      DateTime? pickedDateTime = await showDatePickerTimePicker();
+      if (pickedDateTime != null) {
+        await _dbHelper.insertReminder(Reminder(
+          noteId: note.id!,
+          userId: note.userId,
+          reminderTime: pickedDateTime,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ));
+        note.hasReminder = true; // Update the note's hasReminder
+        await _dbHelper.updateNote(note);
+        _refreshNoteList();
+      }
+    }
+  }
+
+  Future<bool> _showConfirmDialog(String title, String content) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(content),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Confirm'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<DateTime?> showDatePickerTimePicker() async {
+    DateTime? date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (date != null) {
+      TimeOfDay? time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (time != null) {
+        return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      }
+    }
+    return null;
   }
 
   // Build the UI
@@ -492,14 +567,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                   },
                 ),
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white),
-              onPressed: () {
-                Supabase.instance.client.auth.signOut();
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/',
-                  (route) => false,
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () {
+              Supabase.instance.client.auth.signOut();
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
               );
             },
           ),
