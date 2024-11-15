@@ -88,7 +88,7 @@ class _FolderEditState extends State<FolderEdit> {
     );
 
     if (confirm == true) {
-      await _dbHelper.deleteFolder(widget.folder.id!);
+      await _dbHelper.deleteFolder(widget.folder.id);
       Navigator.pop(context, true); // Indicate that a refresh is needed
     }
   }

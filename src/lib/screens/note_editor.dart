@@ -149,14 +149,14 @@ class _NoteEditorState extends State<NoteEditor> {
       }
 
       Note note = Note(
-        id: widget.note?.id ?? 0, // Provide a default value for new notes
+        id: widget.note?.id,
         title: _title,
         body: _content,
         userId: user.id,
         folderId: _selectedFolderId,
-        attachmentPath: null, // Adjust if handling attachments
         createdAt: widget.note?.createdAt ?? DateTime.now(),
         updatedAt: DateTime.now(),
+        hasReminder: widget.note?.hasReminder ?? false,
       );
 
       try {
@@ -165,7 +165,7 @@ class _NoteEditorState extends State<NoteEditor> {
         } else {
           await _dbHelper.updateNote(note);
         }
-        Navigator.pop(context, true);
+        Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error saving note: $e')),
