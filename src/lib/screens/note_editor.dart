@@ -3,7 +3,7 @@ import '../models/note.dart';
 import '../models/folder.dart';
 import '../services/db_helper.dart';
 import '../services/summarization_service.dart';
-import '../services/suggestion_service.dart'; // Import Suggestion Service
+import '../services/suggestion_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NoteEditor extends StatefulWidget {
@@ -25,7 +25,7 @@ class _NoteEditorState extends State<NoteEditor> {
   String _title = '';
   String _content = '';
   String _summary = '';
-  List<String> _suggestions = [];
+  Map<String, dynamic>? _suggestionWithFeedback;
   bool _isLoadingSummary = false;
   bool _isLoadingSuggestions = false;
   int? _selectedFolderId;
@@ -75,16 +75,23 @@ class _NoteEditorState extends State<NoteEditor> {
     }
   }
 
-  // Generate AI suggestions
+  // Generate a single AI suggestion
   Future<void> _generateSuggestions() async {
     setState(() {
       _isLoadingSuggestions = true;
     });
     try {
       final suggestions = await _suggestionService.generateSuggestions(_content);
-      setState(() {
-        _suggestions = suggestions;
-      });
+      final filteredSuggestions = suggestions
+          .skip(1) // Skip the first item if it is the header
+          .where((suggestion) => suggestion.trim().isNotEmpty) // Filter out empty suggestions
+          .toList();
+
+      if (filteredSuggestions.isNotEmpty) {
+        setState(() {
+          _suggestionWithFeedback = {'text': filteredSuggestions.first, 'feedback': null}; // Only one suggestion
+        });
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error generating suggestions: $e')),
@@ -94,6 +101,38 @@ class _NoteEditorState extends State<NoteEditor> {
         _isLoadingSuggestions = false;
       });
     }
+  }
+
+  // Highlight keywords in text
+  List<TextSpan> _highlightKeywords(String text, List<String> keywords) {
+    final spans = <TextSpan>[];
+    int start = 0;
+
+    for (final keyword in keywords) {
+      final lowerKeyword = keyword.toLowerCase();
+      final index = text.toLowerCase().indexOf(lowerKeyword, start);
+
+      if (index == -1) continue;
+
+      // Add normal text before the keyword
+      if (index > start) {
+        spans.add(TextSpan(text: text.substring(start, index), style: TextStyle(color: Colors.black)));
+      }
+
+      // Add highlighted keyword
+      spans.add(TextSpan(
+          text: text.substring(index, index + keyword.length),
+          style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)));
+
+      start = index + keyword.length;
+    }
+
+    // Add the remaining text
+    if (start < text.length) {
+      spans.add(TextSpan(text: text.substring(start), style: TextStyle(color: Colors.black)));
+    }
+
+    return spans;
   }
 
   // Save the note to the database
@@ -248,12 +287,42 @@ class _NoteEditorState extends State<NoteEditor> {
                   style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
                 ),
               ),
-            if (_suggestions.isNotEmpty)
+            if (_suggestionWithFeedback != null)
               ExpansionTile(
-                title: Text('Suggestions', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                children: _suggestions.map((suggestion) => ListTile(
-                  title: Text(suggestion),
-                )).toList(),
+                title: Text('Suggestion', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                children: [
+                  ListTile(
+                    title: RichText(
+                      text: TextSpan(
+                        children: _highlightKeywords(
+                          _suggestionWithFeedback!['text'],
+                          ['task', 'project', 'plan'], // Example keywords
+                        ),
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.thumb_up, color: _suggestionWithFeedback!['feedback'] == 'positive' ? Colors.green : Colors.grey),
+                          onPressed: () {
+                            setState(() {
+                              _suggestionWithFeedback!['feedback'] = 'positive';
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.thumb_down, color: _suggestionWithFeedback!['feedback'] == 'negative' ? Colors.red : Colors.grey),
+                          onPressed: () {
+                            setState(() {
+                              _suggestionWithFeedback!['feedback'] = 'negative';
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
           ],
         ),
