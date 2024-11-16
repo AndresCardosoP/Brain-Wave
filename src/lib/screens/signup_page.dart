@@ -18,7 +18,50 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final SupabaseClient client = Supabase.instance.client;
   bool isLoading = false;
+
+  Future<bool> createUser({
+    required final String email,
+    required final String password,
+    required final String reTypePassword,
+    required final String firstName,
+    required final String lastName,
+  }) async {
+    if (password != reTypePassword) {
+      context.showErrorMessage("Passwords do not match");
+      return false;
+    }
+
+    try {
+      final response =
+          await client.auth.signUp(email: email, password: password);
+      if (response.session == null) {
+        context.showErrorMessage('Sign up failed: ${'Unknown error'}');
+        return false;
+      } else {
+        // Insert additional user information into public.users table
+        final userId = response.user!.id;
+        final insertResponse = await client.from('users').insert({
+          'auth_id': userId,
+          'email': email,
+          'first_name': firstName,
+          'last_name': lastName,
+        });
+
+        if (insertResponse.error != null) {
+          context.showErrorMessage(
+              'Failed to save user information: ${insertResponse.error!.message}');
+          return false;
+        }
+
+        return true;
+      }
+    } catch (e) {
+      context.showErrorMessage('Sign up failed: $e');
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,32 +107,15 @@ class _SignUpPageState extends State<SignUpPage> {
           ),
           MyButton(
             onTap: () async {
-              if (_passwordController.text != _confirmPasswordController.text) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Passwords do not match')),
-                );
-                return;
-              }
-              try {
-                await client.auth.signUp(
-                  email: _emailController.text,
-                  password: _passwordController.text,
-                );
-                if (mounted) {
-                  Navigator.pushNamed(context, '/home');
-                }
-              } on AuthException catch (error) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(error.message)),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Unexpected error')),
-                );
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Unexpected error')),
-                );
+              bool success = await createUser(
+                email: _emailController.text,
+                password: _passwordController.text,
+                reTypePassword: _confirmPasswordController.text,
+                firstName: _firstNameController.text,
+                lastName: _lastNameController.text,
+              );
+              if (success) {
+                Navigator.pushNamed(context, '/home');
               }
             },
             child: const Text('Sign Up'),
