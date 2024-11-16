@@ -165,7 +165,7 @@ class _NoteEditorState extends State<NoteEditor> {
         } else {
           await _dbHelper.updateNote(note);
         }
-        Navigator.pop(context);
+        Navigator.pop(context); // This will trigger _refreshNoteList
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error saving note: $e')),
