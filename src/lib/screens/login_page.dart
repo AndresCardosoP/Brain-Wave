@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:src/components/spacerwithline.dart';
-import 'package:src/components/textformfield.dart';
+import 'package:src/components/textbox.dart';
 import 'package:src/components/button.dart';
-import 'package:src/components/signupbutton.dart';
 import 'package:src/utils/constant.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:src/services/db_helper.dart'; // Import the updated DBHelper class
@@ -94,14 +92,14 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Icon(
-              Icons.water,
+              Icons.waves_sharp,
               size: 150,
               color: Colors.blue,
             ),
             const Text(
-              'Login',
+              'BrainWave',
               style: TextStyle(
-                fontSize: 30,
+                fontSize: 50,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue,
               ),
@@ -117,16 +115,16 @@ class _LoginPageState extends State<LoginPage> {
               obscureText: true,
             ),
             MyButton(
-              onTap: isLoading ? null : _handleLogin, // Disable button while loading
+              onTap: isLoading ? null : _handleLogin,
               child: isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
                   : const Text('Login'),
             ),
-            const spacerWithLine(),
-            SignUpButton(
-              onTap: () {
+            TextButton(
+              onPressed: () {
                 Navigator.pushNamed(context, '/signup');
               },
+              child: const Text("Don't have an account? Sign Up"),
             ),
           ],
         ),
