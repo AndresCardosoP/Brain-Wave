@@ -1,14 +1,19 @@
-// src/lib/services/db_helper.dart
-
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../models/reminder.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:path/path.dart';
 
 class DBHelper {
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
   DBHelper() {
     tz.initializeTimeZones();
   }
@@ -19,9 +24,44 @@ class DBHelper {
 
   final supabase = Supabase.instance.client;
 
-  // Notes CRUD operations
+  // SQLite Database instance
+  static Database? _sqliteDatabase;
 
-  // Insert a new note into the database
+  // Initialize SQLite Database
+  Future<Database> get sqliteDatabase async {
+    if (_sqliteDatabase != null) return _sqliteDatabase!;
+
+    // Platform-specific initialization
+    if (kIsWeb || Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
+      databaseFactory = databaseFactoryFfi; // Use sqflite_common_ffi for web and desktop
+    }
+
+    _sqliteDatabase = await _initSQLiteDB();
+    return _sqliteDatabase!;
+  }
+
+  Future<Database> _initSQLiteDB() async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'brainwave.db');
+
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: (db, version) async {
+        // Create table for credentials
+        await db.execute('''
+          CREATE TABLE credentials (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            password TEXT NOT NULL
+          )
+        ''');
+      },
+    );
+  }
+
+  // ********** Notes CRUD Operations **********
+
   Future<void> insertNote(Note note) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
@@ -35,7 +75,6 @@ class DBHelper {
     }
   }
 
-  // Retrieve all notes from the database
   Future<List<Note>> getNotes({int? folderId}) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
@@ -58,7 +97,6 @@ class DBHelper {
     }
   }
 
-  // Update an existing note
   Future<void> updateNote(Note note) async {
     await supabase.from('notes').update({
       'title': note.title,
@@ -68,14 +106,12 @@ class DBHelper {
     }).eq('id', note.id!);
   }
 
-  // Delete a note
   Future<void> deleteNote(int id) async {
     await supabase.from('notes').delete().eq('id', id);
   }
 
-  // Folders CRUD operations
+  // ********** Folders CRUD Operations **********
 
-  // Insert a new folder into the database
   Future<void> insertFolder(Folder folder) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
@@ -86,7 +122,6 @@ class DBHelper {
     }
   }
 
-  // Retrieve all folders from the database
   Future<List<Folder>> getFolders() async {
     final user = supabase.auth.currentUser;
     if (user != null) {
@@ -103,35 +138,27 @@ class DBHelper {
     }
   }
 
-  // Update a folder's name
   Future<void> updateFolder(Folder folder) async {
     await supabase.from('folders').update({
       'name': folder.name,
     }).eq('id', folder.id);
   }
 
-  // Delete a folder and all its associated notes from the database
   Future<void> deleteFolder(int id) async {
-    // Delete all notes associated with the folder
     await supabase.from('notes').delete().eq('folder_id', id);
-
-    // Delete the folder
     await supabase.from('folders').delete().eq('id', id);
   }
 
-  // Reminders CRUD operations
+  // ********** Reminders CRUD Operations **********
 
-  // Insert a new reminder
   Future<void> insertReminder(Reminder reminder) async {
     await supabase.from('reminders').insert(reminder.toMap());
   }
 
-  // Delete a reminder
   Future<void> deleteReminder(int noteId) async {
     await supabase.from('reminders').delete().eq('note_id', noteId);
   }
 
-  // Check if a reminder exists for a note
   Future<bool> hasReminder(int noteId) async {
     final response = await supabase
         .from('reminders')
@@ -140,5 +167,35 @@ class DBHelper {
         .maybeSingle();
 
     return response != null;
+  }
+
+  // ********** Credentials Operations with SQLite **********
+
+  Future<void> saveCredentials(String username, String password) async {
+    final db = await sqliteDatabase;
+
+    // Clear existing credentials (one user at a time)
+    await db.delete('credentials');
+
+    // Insert new credentials
+    await db.insert('credentials', {'username': username, 'password': password});
+  }
+
+  Future<Map<String, String>?> getCredentials() async {
+    final db = await sqliteDatabase;
+    final result = await db.query('credentials', limit: 1);
+
+    if (result.isNotEmpty) {
+      return {
+        'username': result.first['username'] as String,
+        'password': result.first['password'] as String,
+      };
+    }
+    return null;
+  }
+
+  Future<void> deleteCredentials() async {
+    final db = await sqliteDatabase;
+    await db.delete('credentials');
   }
 }
