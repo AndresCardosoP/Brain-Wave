@@ -5,6 +5,7 @@ import '../models/folder.dart';
 import '../services/db_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// Stateful widget for editing a folder
 class FolderEdit extends StatefulWidget {
   final Folder folder;
 
@@ -22,9 +23,11 @@ class _FolderEditState extends State<FolderEdit> {
   @override
   void initState() {
     super.initState();
+    // Initialize folder name with the current folder's name
     _folderName = widget.folder.name;
   }
 
+  // Method to rename the folder
   void _renameFolder() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -60,11 +63,13 @@ class _FolderEditState extends State<FolderEdit> {
     }
   }
 
+  // Method to delete the folder
   void _deleteFolder() async {
     // Prevent deleting the default "Notes" folder
     if (widget.folder.name.toLowerCase() == 'notes') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot delete the default "Notes" folder.')),
+        const SnackBar(
+            content: Text('Cannot delete the default "Notes" folder.')),
       );
       return;
     }
@@ -73,7 +78,8 @@ class _FolderEditState extends State<FolderEdit> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Folder'),
-        content: const Text('Are you sure you want to delete this folder? This will unassign its notes.'),
+        content: const Text(
+            'Are you sure you want to delete this folder? This will unassign its notes.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, true),

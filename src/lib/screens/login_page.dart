@@ -13,15 +13,15 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  /// Initialize controllers for email and password
+  // Initialize controllers for email and password
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool isLoading = false;
 
-  /// Initialize the database helper
+  // Initialize the database helper
   final dbHelper = DBHelper.instance();
 
-  /// Auto-fill credentials if stored in local database
+  // Auto-fill credentials if stored in local database
   void _autoFillCredentials() async {
     final credentials = await dbHelper.getCredentials();
     if (credentials != null) {
@@ -32,12 +32,12 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  /// Save credentials to local database after successful login
+  // Save credentials to local database after successful login
   Future<void> _saveCredentials(String email, String password) async {
     await dbHelper.saveCredentials(email, password);
   }
 
-  /// Handle user login
+  // Handle user login
   Future<void> _handleLogin() async {
     setState(() {
       isLoading = true;

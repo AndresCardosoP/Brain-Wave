@@ -6,6 +6,7 @@ import '../screens/note_editor.dart';
 import '../models/note.dart';
 import '../services/db_helper.dart';
 
+// Stateful widget to display notes in a folder
 class FolderView extends StatefulWidget {
   final int currentFolderId;
 
@@ -22,9 +23,10 @@ class _FolderViewState extends State<FolderView> {
   @override
   void initState() {
     super.initState();
-    _fetchNotes();
+    _fetchNotes(); // Fetch notes when the widget is initialized
   }
 
+  // Fetch notes from the database for the current folder
   void _fetchNotes() async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
@@ -49,10 +51,10 @@ class _FolderViewState extends State<FolderView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Folder Notes'),
+        title: const Text('Folder Notes'), // App bar title
       ),
       body: _notes.isEmpty
-          ? const Center(child: Text('No notes in this folder'))
+          ? const Center(child: Text('No notes in this folder')) // Display message if no notes
           : ListView.builder(
               itemCount: _notes.length,
               itemBuilder: (context, index) {
@@ -67,7 +69,7 @@ class _FolderViewState extends State<FolderView> {
                       ),
                     ).then((shouldRefresh) {
                       if (shouldRefresh == true) {
-                        _fetchNotes();
+                        _fetchNotes(); // Refresh notes if needed
                       }
                     });
                   },
@@ -85,12 +87,12 @@ class _FolderViewState extends State<FolderView> {
             ),
           ).then((shouldRefresh) {
             if (shouldRefresh == true) {
-              _fetchNotes();
+              _fetchNotes(); // Refresh notes if needed
             }
           });
         },
         child: const Icon(Icons.add),
-        tooltip: 'Create New Note',
+        tooltip: 'Create New Note', // Tooltip for the FAB
       ),
     );
   }

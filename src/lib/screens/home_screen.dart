@@ -72,24 +72,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Fetch notes from the database
   void _refreshNoteList() async {
-  try {
-    List<Note> notes = await _dbHelper.getNotes(folderId: _selectedFolder?.id);
-    if (_searchQuery.isNotEmpty) {
-      notes = notes.where((note) {
-        return note.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            note.body.toLowerCase().contains(_searchQuery.toLowerCase());
-      }).toList();
+    try {
+      List<Note> notes =
+          await _dbHelper.getNotes(folderId: _selectedFolder?.id);
+      if (_searchQuery.isNotEmpty) {
+        notes = notes.where((note) {
+          return note.title
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
+              note.body.toLowerCase().contains(_searchQuery.toLowerCase());
+        }).toList();
+      }
+      setState(() {
+        _notes = notes;
+      });
+    } catch (e) {
+      // Handle error (e.g., show a snackbar)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching notes: $e')),
+      );
     }
-    setState(() {
-      _notes = notes;
-    });
-  } catch (e) {
-    // Handle error (e.g., show a snackbar)
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error fetching notes: $e')),
-    );
   }
-}
 
   // Navigate to the Note Editor to add or edit a note
   Future<void> _navigateToEditor({Note? note}) async {
@@ -143,12 +146,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Prevent creating a folder named "Notes"
                 if (folderName.trim().toLowerCase() == 'notes') {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Folder name "Notes" is reserved.')),
+                    const SnackBar(
+                        content: Text('Folder name "Notes" is reserved.')),
                   );
                   return;
                 }
                 await _dbHelper.insertFolder(Folder(
-                  id: DateTime.now().millisecondsSinceEpoch, // provide a unique id
+                  id: DateTime.now()
+                      .millisecondsSinceEpoch, // provide a unique id
                   name: folderName.trim(),
                   userId: 'your_user_id', // replace with actual user id
                   createdAt: DateTime.now(),
@@ -175,7 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        final TextEditingController controller = TextEditingController(text: folder.name);
+        final TextEditingController controller =
+            TextEditingController(text: folder.name);
         return AlertDialog(
           title: const Text('Rename Folder'),
           content: TextField(
@@ -190,7 +196,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Prevent renaming to "Notes"
                   if (newFolderName.trim().toLowerCase() == 'notes') {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Folder name "Notes" is reserved.')),
+                      const SnackBar(
+                          content: Text('Folder name "Notes" is reserved.')),
                     );
                     return;
                   }
@@ -223,7 +230,8 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Folder?'),
-        content: const Text('This will remove the folder and all the notes inside. Continue?'),
+        content: const Text(
+            'This will remove the folder and all the notes inside. Continue?'),
         actions: [
           TextButton(
             onPressed: () async {
@@ -299,7 +307,8 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.separated(
               padding: EdgeInsets.zero, // Remove extra padding
               itemCount: _folders.length,
-              separatorBuilder: (context, index) => const Divider(height: 1, color: Colors.grey),
+              separatorBuilder: (context, index) =>
+                  const Divider(height: 1, color: Colors.grey),
               itemBuilder: (context, index) {
                 Folder folder = _folders[index];
                 return ListTile(
@@ -325,14 +334,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         _deleteFolderConfirm(folder.id!);
                       }
                     },
-                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<String>>[
                       const PopupMenuItem<String>(
                         value: 'rename',
-                        child: Text('Rename', style: TextStyle(color: Colors.black)),
+                        child: Text('Rename',
+                            style: TextStyle(color: Colors.black)),
                       ),
                       const PopupMenuItem<String>(
                         value: 'delete',
-                        child: Text('Delete', style: TextStyle(color: Colors.black)),
+                        child: Text('Delete',
+                            style: TextStyle(color: Colors.black)),
                       ),
                     ],
                   ),
@@ -359,7 +371,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Helper method to format timestamps
   String _formatTimestamp(String timestamp) {
-    DateTime noteTime = DateTime.parse(timestamp).toLocal(); // Convert to local time
+    DateTime noteTime =
+        DateTime.parse(timestamp).toLocal(); // Convert to local time
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
     DateTime yesterday = today.subtract(const Duration(days: 1));
@@ -402,7 +415,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 8.0),
                 Text(
                   note.title,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4.0),
@@ -467,7 +481,8 @@ class _HomeScreenState extends State<HomeScreen> {
       if (confirm == true) {
         try {
           await _dbHelper.deleteReminder(note.id!);
-          await _dbHelper.updateNoteReminderStatus(note.id!, false); // Update has_reminder to FALSE
+          await _dbHelper.updateNoteReminderStatus(
+              note.id!, false); // Update has_reminder to FALSE
           setState(() {
             note.hasReminder = false;
           });
@@ -512,7 +527,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   updatedAt: DateTime.now(),
                 ),
               );
-              await _dbHelper.updateNoteReminderStatus(note.id!, true); // Update has_reminder to TRUE
+              await _dbHelper.updateNoteReminderStatus(
+                  note.id!, true); // Update has_reminder to TRUE
               setState(() {
                 note.hasReminder = true;
               });
@@ -571,14 +587,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                   },
                 ),
-            IconButton(
-              icon: const Icon(Icons.logout, color: Colors.white),
-              onPressed: () {
-                Supabase.instance.client.auth.signOut();
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/',
-                  (route) => false,
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () {
+              Supabase.instance.client.auth.signOut();
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (route) => false,
               );
             },
           ),
