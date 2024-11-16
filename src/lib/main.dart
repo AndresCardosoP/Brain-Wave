@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'utils/constant.dart';
+import 'utils/constant.dart' as utils;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:src/screens/login_page.dart';
 import 'package:src/screens/home_screen.dart';
+import 'package:src/screens/signup_page.dart';
 
 // import 'package:supabase_quickstart/pages/account_page.dart';
 // import 'package:supabase_quickstart/pages/login_page.dart';
@@ -29,9 +30,11 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute: client.auth.currentSession != null ? '/BrainWave' : '/',
+        initialRoute: utils.client.auth.currentSession != null ? '/BrainWave' : '/',
         routes: {
           '/': (content) => const LoginPage(),
+          '/signup': (content) => const SignUpPage(),
+          '/login': (content) => const LoginPage(),
           '/home': (content) => const HomeScreen(),
         });
   }

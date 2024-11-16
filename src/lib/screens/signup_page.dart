@@ -4,18 +4,20 @@ import 'package:src/components/button.dart';
 import 'package:src/utils/constant.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  ///initialize controller for email and password
-
+class _SignUpPageState extends State<SignUpPage> {
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool isLoading = false;
 
   @override
@@ -35,7 +37,16 @@ class _LoginPageState extends State<LoginPage> {
                   fontSize: 50,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue)),
-          SizedBox(height: 50),
+          MyTextFormField(
+            controller: _firstNameController,
+            label: const Text('First Name'),
+            obscureText: false,
+          ),
+          MyTextFormField(
+            controller: _lastNameController,
+            label: const Text('Last Name'),
+            obscureText: false,
+          ),
           MyTextFormField(
             controller: _emailController,
             label: const Text('Email Address'),
@@ -46,10 +57,21 @@ class _LoginPageState extends State<LoginPage> {
             label: const Text('Password'),
             obscureText: true,
           ),
+          MyTextFormField(
+            controller: _confirmPasswordController,
+            label: const Text('Confirm Password'),
+            obscureText: true,
+          ),
           MyButton(
             onTap: () async {
+              if (_passwordController.text != _confirmPasswordController.text) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Passwords do not match')),
+                );
+                return;
+              }
               try {
-                await client.auth.signInWithPassword(
+                await client.auth.signUp(
                   email: _emailController.text,
                   password: _passwordController.text,
                 );
@@ -61,22 +83,22 @@ class _LoginPageState extends State<LoginPage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(error.message)),
                 );
-                // ScaffoldMessenger.of(context).showSnackBar(
-                //   const SnackBar(content: Text('Unexpected error')),
-                // );
-                // if (!context.mounted) return;
-                // ScaffoldMessenger.of(context).showSnackBar(
-                //   const SnackBar(content: Text('Unexpected error')),
-                // );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Unexpected error')),
+                );
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Unexpected error')),
+                );
               }
             },
-            child: const Text('Login'),
+            child: const Text('Sign Up'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/signup');
+              Navigator.pushNamed(context, '/login');
             },
-            child: const Text("Don't have an account? Sign Up"),
+            child: const Text('Already have an account? Log in'),
           ),
         ],
       ),
