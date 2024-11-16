@@ -331,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (value == 'rename') {
                         _renameFolder(folder);
                       } else if (value == 'delete') {
-                        _deleteFolderConfirm(folder.id!);
+                        _deleteFolderConfirm(folder.id);
                       }
                     },
                     itemBuilder: (BuildContext context) =>

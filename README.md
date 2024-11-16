@@ -10,7 +10,6 @@
   - [Search](#search)
 - [Getting Started](#getting-started)
   - [Installation](#installation)
-  - [Setup](#setup)
   - [Login Page](#login-page)
   - [Sign Up](#sign-up)
 - [Usage](#usage)
@@ -46,8 +45,6 @@
 ## Introduction
 BrainWave is a versatile note-taking application designed to help you organize your thoughts, tasks, and reminders efficiently. With features like folders and reminders, managing your notes has never been easier.
 
-To run the Flutter app, navigate to the `src` directory by executing `cd src` in your terminal, as that's where the Flutter app is located.
-
 ## Features
 
 ### Notes
@@ -67,7 +64,8 @@ To run the Flutter app, navigate to the `src` directory by executing `cd src` in
 - Visual indicators for notes with active reminders.
 
 ### AI Features
-When creating or editing a note, you have the option to use AI features. The "Summarize" button will answer any questions you might have in your file, while the "Suggestions" button provides ideas for topics you want to discuss.
+- Summarize your note and get answers to questions you might have in the note
+- Use suggestions to get ideas for topics your note discusses
 
 ### Search
 - Search for notes within a folder using the search bar.
@@ -75,34 +73,45 @@ When creating or editing a note, you have the option to use AI features. The "Su
 - A logout icon is available beside the search bar for easy logout.
 
 ## Getting Started
-To get started with BrainWave, follow the steps below:
 
-1. **Installation:** Download and install the BrainWave app from the [official website](#).
-2. **Setup:** Launch the app and create your first note.
+### Installation
+
+To install and run the application, follow these steps:
+
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/HarshPanchal01/BrainWave.git
+   cd brainwave
+2. **Run the application:**
+    ```sh
+    cd src
+    flutter clean && flutter pub get # Install dependencies
+    flutter run
+> **Note:** You must have flutter installed to run the application, follow this documentation if needed: https://docs.flutter.dev/get-started/install
 
 ### Login Page
 On the login page, you can enter your email and password if you already have an account. If you incorrectly type your password, an error message will appear in the snackbar indicating that the password is incorrect. However, if you enter your email and password correctly, you will be navigated to the home page.
 
 ### Sign Up
-If you don't have an account, you can click the sign-up link on the login page to navigate to the sign-up page. Here, you can create an account by providing your first name, last name, email, password, and confirming your password. Ensure that both passwords match before creating an account; otherwise, an error message will appear in the snackbar indicating that the passwords do not match. Additionally, if you try to create an account with an email that is already in use, an error message will appear in the snackbar indicating that the email is already in use.
+If you don't have an account, you can tap the sign-up link on the login page to navigate to the sign-up page. Here, you can create an account by providing your first name, last name, email, password, and confirming your password. Ensure that both passwords match before creating an account; otherwise, an error message will appear in the snackbar indicating that the passwords do not match. Additionally, if you try to create an account with an email that is already in use, an error message will appear in the snackbar indicating that the email is already in use.
 
 ## Usage
 
 ### Creating a Note
 1. Tap on the **`+`** button to create a new note.
 2. Enter the **title** and **content** for your note.
-3. Click **Save** to add the note to your list.
+3. Tap **Save** to add the note to your list.
 
 ### Editing a Note
 1. Tap on an existing note to open it.
 2. Make the desired changes to the title or content.
-3. Click **Save** to update the note, or click **Back** to discard changes.
+3. Tap **Save** to update the note, or tap **Back** to discard changes.
 
 ### Managing Folders
 1. Open the sidebar by tapping the icon on the top left.
 2. Create a new folder by selecting the **Create Folder** option.
 3. Notes created without specifying a folder will be placed in the default **Notes** folder, which cannot be deleted.
-4. To rename or delete a folder, click on the **`⋮`** (three dots) beside the folder name.
+4. To rename or delete a folder, tap on the **`⋮`** (three dots) beside the folder name.
 
 ### Setting Reminders
 1. To add a reminder to a note, tap on the **bell** icon.
@@ -116,7 +125,7 @@ If you don't have an account, you can click the sign-up link on the login page t
 2. Confirm the deletion when prompted.
 
 ### Deleting Folders
-1. Click on the **`⋮`** (three dots) next to the folder you want to delete.
+1. Tap on the **`⋮`** (three dots) next to the folder you want to delete.
 2. Select the **Delete** option and confirm.
    > **Note:** Deleting a folder will also remove all notes contained within it.
 
@@ -130,24 +139,18 @@ If you don't have an account, you can click the sign-up link on the login page t
 #### Sign Up
 ![Sign Up](screenshots/SignIn.png)
 
-#### Sign In
-![Sign In](screenshots/SignIn.png)
-
 ### Notes
 
 #### Creating a Note
-![Creating a Note](screenshots/CreatingNote.png)
+![Creating a Note](screenshots/EmptyNote.png)
 
 #### Editing a Note
-![Editing a Note](screenshots/edit_note.png)
-
-#### Empty Note
-![Empty Note](screenshots/EmptyNote.png)
+![Editing a Note](screenshots/CreatingNote.png)
 
 ### Folders
 
 #### Managing Folders
-![Managing Folders](screenshots/manage_folders.png)
+![Managing Folders](screenshots/OneFolders.png)
 
 #### Folder Features
 ![Folder Features](screenshots/FolderFeatures.png)
@@ -155,13 +158,12 @@ If you don't have an account, you can click the sign-up link on the login page t
 #### Folder Picker
 ![Folder Picker](screenshots/FolderPicker.png)
 
-#### One Folder View
-![One Folder View](screenshots/OneFolders.png)
-
 ### Reminders
 
 #### Setting Reminders
-![Setting Reminders](screenshots/set_reminder.png)
+![Setting Reminders](screenshots/Reminder.png)
+
+![Set Time](screenshots/SetTime.png)
 
 #### Delete Reminder
 ![Delete Reminder](screenshots/DeleteReminder.png)
@@ -179,15 +181,6 @@ If you don't have an account, you can click the sign-up link on the login page t
 
 #### Empty Folders
 ![Empty Folders](screenshots/EmptyFolders.png)
-
-#### Reminder
-![Reminder](screenshots/Reminder.png)
-
-#### Set Time
-![Set Time](screenshots/SetTime.png)
-
-#### One Note View
-![One Note View](screenshots/OneNote.png)
 
 ## License
 This project is licensed under the [MIT License](LICENSE).
