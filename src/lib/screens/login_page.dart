@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:src/components/spacerwithline.dart';
-import 'package:src/components/textformfield.dart';
+import 'package:src/components/textbox.dart';
 import 'package:src/components/button.dart';
-import 'package:src/components/signupbutton.dart';
 import 'package:src/utils/constant.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -20,17 +18,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool isLoading = false;
 
-  // ///[userLogin] function that handles the login
-  // Future<String?> userLogin({
-  //   required final String email,
-  //   required final String password,
-  // }) async {
-  //   final response =
-  //       await client.auth.signInWithPassword(email: email, password: password);
-  //   final user = response.user;
-  //   return user?.id;
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,15 +26,16 @@ class _LoginPageState extends State<LoginPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Icon(
-            Icons.water,
+            Icons.waves_sharp,
             size: 150,
             color: Colors.blue,
           ),
-          const Text('Login',
+          const Text('BrainWave',
               style: TextStyle(
-                  fontSize: 30,
+                  fontSize: 50,
                   fontWeight: FontWeight.bold,
                   color: Colors.blue)),
+          SizedBox(height: 50),
           MyTextFormField(
             controller: _emailController,
             label: const Text('Email Address'),
@@ -73,20 +61,22 @@ class _LoginPageState extends State<LoginPage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(error.message)),
                 );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Unexpected error')),
-                );
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Unexpected error')),
-                );
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   const SnackBar(content: Text('Unexpected error')),
+                // );
+                // if (!context.mounted) return;
+                // ScaffoldMessenger.of(context).showSnackBar(
+                //   const SnackBar(content: Text('Unexpected error')),
+                // );
               }
             },
             child: const Text('Login'),
           ),
-          const spacerWithLine(),
-          SignUpButton(
-            onTap: () {},
+          TextButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/signup');
+            },
+            child: const Text("Don't have an account? Sign Up"),
           ),
         ],
       ),
