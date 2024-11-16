@@ -106,6 +106,14 @@ class DBHelper {
     }).eq('id', note.id!);
   }
 
+  // Update the 'has_reminder' field of a note
+  Future<void> updateNoteReminderStatus(int noteId, bool hasReminder) async {
+    await supabase
+        .from('notes')
+        .update({'has_reminder': hasReminder})
+        .eq('id', noteId);
+  }
+
   Future<void> deleteNote(int id) async {
     await supabase.from('notes').delete().eq('id', id);
   }
