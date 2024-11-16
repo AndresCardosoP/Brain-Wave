@@ -17,18 +17,19 @@ class MyTextFormField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(
         top: 25,
-        bottom: 25,
-        right: 25,
+        bottom: 5,
+        left: 30,
+        right: 30,
       ),
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
           label: label,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(10),
           ),
         ),
-        obscureText: obscureText, // Pass the obscureText property here
+        obscureText: obscureText,
       ),
     );
   }

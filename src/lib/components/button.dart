@@ -12,7 +12,7 @@ class MyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    //final size = MediaQuery.of(context).size;
     return Padding(
       padding: const EdgeInsets.only(
         top: 25,
@@ -23,7 +23,7 @@ class MyButton extends StatelessWidget {
           onTap: onTap,
           child: Container(
             alignment: Alignment.center,
-            width: size.width,
+            width: 100,
             height: 40,
             decoration: BoxDecoration(
               color: Colors.blue,
