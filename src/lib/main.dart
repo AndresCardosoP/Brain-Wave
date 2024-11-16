@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute: utils.client.auth.currentSession != null ? '/BrainWave' : '/',
+        initialRoute: utils.client.auth.currentSession != null ? '/home' : '/',
         routes: {
           '/': (content) => const LoginPage(),
           '/signup': (content) => const SignUpPage(),
