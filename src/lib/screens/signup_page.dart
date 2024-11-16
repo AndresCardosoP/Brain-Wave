@@ -24,11 +24,11 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<bool> createUser({
     required final String email,
     required final String password,
-    required final String reTypePassword,
+    required final String ConfirmPassword,
     required final String firstName,
     required final String lastName,
   }) async {
-    if (password != reTypePassword) {
+    if (password != ConfirmPassword) {
       context.showErrorMessage("Passwords do not match");
       return false;
     }
@@ -36,27 +36,16 @@ class _SignUpPageState extends State<SignUpPage> {
     try {
       final response =
           await client.auth.signUp(email: email, password: password);
-      if (response.session == null) {
-        context.showErrorMessage('Sign up failed: ${'Unknown error'}');
-        return false;
-      } else {
-        // Insert additional user information into public.users table
-        final userId = response.user!.id;
-        final insertResponse = await client.from('users').insert({
-          'auth_id': userId,
-          'email': email,
-          'first_name': firstName,
-          'last_name': lastName,
-        });
+      // Insert additional user information into public.users table
+      final userId = response.user!.id;
+      await client.from('users').insert({
+        'auth_id': userId,
+        'email': email,
+        'first_name': firstName,
+        'last_name': lastName,
+      });
 
-        if (insertResponse.error != null) {
-          context.showErrorMessage(
-              'Failed to save user information: ${insertResponse.error!.message}');
-          return false;
-        }
-
-        return true;
-      }
+      return true;
     } catch (e) {
       context.showErrorMessage('Sign up failed: $e');
       return false;
@@ -110,7 +99,7 @@ class _SignUpPageState extends State<SignUpPage> {
               bool success = await createUser(
                 email: _emailController.text,
                 password: _passwordController.text,
-                reTypePassword: _confirmPasswordController.text,
+                ConfirmPassword: _confirmPasswordController.text,
                 firstName: _firstNameController.text,
                 lastName: _lastNameController.text,
               );
