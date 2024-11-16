@@ -4,9 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:src/screens/login_page.dart';
 import 'package:src/screens/home_screen.dart';
 
-// import 'package:supabase_quickstart/pages/account_page.dart';
-// import 'package:supabase_quickstart/pages/login_page.dart';
-
 Future<void> main() async {
   await Supabase.initialize(
     url: 'https://rphcagdsmtmhjyrqfzmi.supabase.co/',
