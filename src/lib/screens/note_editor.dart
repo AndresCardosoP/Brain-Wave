@@ -30,6 +30,7 @@ class _NoteEditorState extends State<NoteEditor> {
   bool _isLoadingSuggestions = false;
   int? _selectedFolderId;
   List<Folder> _folders = [];
+  bool _isLoadingFolders = true; // Add this flag
 
   @override
   void initState() {
@@ -51,6 +52,10 @@ class _NoteEditorState extends State<NoteEditor> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading folders: $e')),
       );
+    } finally {
+      setState(() {
+        _isLoadingFolders = false; // Update the loading flag
+      });
     }
   }
 
@@ -177,7 +182,7 @@ class _NoteEditorState extends State<NoteEditor> {
   // Build the UI
   @override
   Widget build(BuildContext context) {
-    if (_folders.isEmpty) {
+    if (_isLoadingFolders) { // Check the loading flag
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.blue,
