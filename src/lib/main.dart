@@ -4,13 +4,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:src/screens/login_page.dart';
 import 'package:src/screens/home_screen.dart';
 import 'package:src/screens/signup_page.dart';
+import 'services/notification_service.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Notification Service
+  await NotificationService().init();
+  tz.initializeTimeZones();
+
+  // Initialize Supabase
   await Supabase.initialize(
     url: 'https://rphcagdsmtmhjyrqfzmi.supabase.co/',
     anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwaGNhZ2RzbXRtaGp5cnFmem1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1MzY4NzIsImV4cCI6MjA0NzExMjg3Mn0.eeVx9hQOsbebMwMjrI5hjmjK3D6GcKZRsUjGnEcHilI',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwaGNhZ2RzbXRtaGp5cnFmem1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE1MzY4NzIsImV4cCI6MjA0NzExMjg3Mn0.eeVx9hQOsbebMwMjrI5hjmjK3D6GcKZRsUjGnEcHilI',
   );
+
   runApp(const MyApp());
 }
 
@@ -27,12 +36,13 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute: utils.client.auth.currentSession != null ? '/home' : '/',
+        initialRoute:
+            utils.client.auth.currentSession != null ? '/home' : '/',
         routes: {
-          '/': (content) => const LoginPage(),
-          '/signup': (content) => const SignUpPage(),
-          '/login': (content) => const LoginPage(),
-          '/home': (content) => const HomeScreen(),
+          '/': (context) => const LoginPage(),
+          '/signup': (context) => const SignUpPage(),
+          '/login': (context) => const LoginPage(),
+          '/home': (context) => const HomeScreen(),
         });
   }
 }

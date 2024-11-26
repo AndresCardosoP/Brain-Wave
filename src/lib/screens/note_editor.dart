@@ -18,7 +18,7 @@ class NoteEditor extends StatefulWidget {
 
 class _NoteEditorState extends State<NoteEditor> {
   final _formKey = GlobalKey<FormState>();
-  final DBHelper _dbHelper = DBHelper();
+  final DBHelper _dbHelper = DBHelper.instance();
   final SummarizationService _summarizationService = SummarizationService();
   final SuggestionService _suggestionService = SuggestionService();
 

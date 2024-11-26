@@ -1,22 +1,16 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:timezone/data/latest.dart' as tz;
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../models/reminder.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
+import 'notification_service.dart';
 
 class DBHelper {
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
-  DBHelper() {
-    tz.initializeTimeZones();
-  }
+  final NotificationService _notificationService = NotificationService();
 
   static final DBHelper _instance = DBHelper._internal();
   factory DBHelper.instance() => _instance;
@@ -159,6 +153,20 @@ class DBHelper {
     await supabase.from('notes').delete().eq('id', id);
   }
 
+  Future<Note?> getNoteById(int noteId) async {
+    final response = await supabase
+        .from('notes')
+        .select('*')
+        .eq('id', noteId)
+        .maybeSingle();
+
+    if (response != null) {
+      return Note.fromMap(response);
+    } else {
+      return null;
+    }
+  }
+
   // ********** Folders CRUD Operations **********
 
   Future<void> insertFolder(Folder folder) async {
@@ -202,20 +210,19 @@ class DBHelper {
 
   Future<void> insertReminder(Reminder reminder) async {
     await supabase.from('reminders').insert(reminder.toMap());
+
+    // Schedule the notification
+    await _notificationService.scheduleNotification(
+      reminder.noteId,
+      (await getNoteById(reminder.noteId))?.title ?? '',
+      'You have a reminder for this note!',
+      reminder.reminderTime,
+    );
   }
 
   Future<void> deleteReminder(int noteId) async {
     await supabase.from('reminders').delete().eq('note_id', noteId);
-  }
-
-  Future<bool> hasReminder(int noteId) async {
-    final response = await supabase
-        .from('reminders')
-        .select('*')
-        .eq('note_id', noteId)
-        .maybeSingle();
-
-    return response != null;
+    await _notificationService.cancelNotification(noteId);
   }
 
   // ********** Credentials Operations with SQLite **********

@@ -544,16 +544,17 @@ class _HomeScreenState extends State<HomeScreen> {
         final user = Supabase.instance.client.auth.currentUser;
         if (user != null) {
           try {
-            await _dbHelper.insertReminder(
-              Reminder(
-                noteId: note.id!,
-                userId: user.id,
-                reminderTime: reminderDateTime,
-                location: location,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              ),
+            Reminder reminder = Reminder(
+              id: DateTime.now().millisecondsSinceEpoch, // Ensure unique ID
+              noteId: note.id!,
+              userId: user.id,
+              reminderTime: reminderDateTime,
+              location: location,
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
             );
+
+            await _dbHelper.insertReminder(reminder);
             await _dbHelper.updateNoteReminderStatus(note.id!, true);
             setState(() {
               note.hasReminder = true;
