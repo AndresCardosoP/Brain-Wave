@@ -18,7 +18,7 @@ class FolderEdit extends StatefulWidget {
 class _FolderEditState extends State<FolderEdit> {
   final _formKey = GlobalKey<FormState>();
   late String _folderName;
-  final DBHelper _dbHelper = DBHelper();
+  final DBHelper _dbHelper = DBHelper.instance();
 
   @override
   void initState() {

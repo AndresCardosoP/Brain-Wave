@@ -17,7 +17,7 @@ class FolderView extends StatefulWidget {
 }
 
 class _FolderViewState extends State<FolderView> {
-  final DBHelper _dbHelper = DBHelper();
+  final DBHelper _dbHelper = DBHelper.instance();
   List<Note> _notes = [];
 
   @override
