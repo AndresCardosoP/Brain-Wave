@@ -10,7 +10,8 @@ class NoteEditor extends StatefulWidget {
   final Note? note; // If null, this is a new note
   final int? initialFolderId; // Current folder ID
 
-  const NoteEditor({Key? key, this.note, this.initialFolderId}) : super(key: key);
+  const NoteEditor({Key? key, this.note, this.initialFolderId})
+      : super(key: key);
 
   @override
   _NoteEditorState createState() => _NoteEditorState();
@@ -86,15 +87,20 @@ class _NoteEditorState extends State<NoteEditor> {
       _isLoadingSuggestions = true;
     });
     try {
-      final suggestions = await _suggestionService.generateSuggestions(_content);
+      final suggestions =
+          await _suggestionService.generateSuggestions(_content);
       final filteredSuggestions = suggestions
           .skip(1) // Skip the first item if it is the header
-          .where((suggestion) => suggestion.trim().isNotEmpty) // Filter out empty suggestions
+          .where((suggestion) =>
+              suggestion.trim().isNotEmpty) // Filter out empty suggestions
           .toList();
 
       if (filteredSuggestions.isNotEmpty) {
         setState(() {
-          _suggestionWithFeedback = {'text': filteredSuggestions.first, 'feedback': null}; // Only one suggestion
+          _suggestionWithFeedback = {
+            'text': filteredSuggestions.first,
+            'feedback': null
+          }; // Only one suggestion
         });
       }
     } catch (e) {
@@ -121,7 +127,9 @@ class _NoteEditorState extends State<NoteEditor> {
 
       // Add normal text before the keyword
       if (index > start) {
-        spans.add(TextSpan(text: text.substring(start, index), style: TextStyle(color: Colors.black)));
+        spans.add(TextSpan(
+            text: text.substring(start, index),
+            style: TextStyle(color: Colors.black)));
       }
 
       // Add highlighted keyword
@@ -134,7 +142,8 @@ class _NoteEditorState extends State<NoteEditor> {
 
     // Add the remaining text
     if (start < text.length) {
-      spans.add(TextSpan(text: text.substring(start), style: TextStyle(color: Colors.black)));
+      spans.add(TextSpan(
+          text: text.substring(start), style: TextStyle(color: Colors.black)));
     }
 
     return spans;
@@ -182,12 +191,14 @@ class _NoteEditorState extends State<NoteEditor> {
   // Build the UI
   @override
   Widget build(BuildContext context) {
-    if (_isLoadingFolders) { // Check the loading flag
+    if (_isLoadingFolders) {
+      // Check the loading flag
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.blue,
           iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text('Loading...', style: TextStyle(color: Colors.white)),
+          title:
+              const Text('Loading...', style: TextStyle(color: Colors.white)),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -206,12 +217,14 @@ class _NoteEditorState extends State<NoteEditor> {
             items: [
               DropdownMenuItem<int?>(
                 value: null,
-                child: const Text('No Folder', style: TextStyle(color: Colors.white)),
+                child:
+                    const Text('Notes', style: TextStyle(color: Colors.white)),
               ),
               ..._folders.map((folder) {
                 return DropdownMenuItem<int?>(
                   value: folder.id,
-                  child: Text(folder.name, style: const TextStyle(color: Colors.white)),
+                  child: Text(folder.name,
+                      style: const TextStyle(color: Colors.white)),
                 );
               }).toList(),
             ],
@@ -235,7 +248,8 @@ class _NoteEditorState extends State<NoteEditor> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: TextFormField(
                 initialValue: _title,
                 maxLines: 1,
@@ -243,7 +257,8 @@ class _NoteEditorState extends State<NoteEditor> {
                   hintText: 'Title',
                   border: InputBorder.none,
                 ),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 onSaved: (value) => _title = value?.trim() ?? '',
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -278,11 +293,15 @@ class _NoteEditorState extends State<NoteEditor> {
             ),
             ElevatedButton(
               onPressed: _isLoadingSummary ? null : _summarizeContent,
-              child: _isLoadingSummary ? CircularProgressIndicator() : Text('Summarize'),
+              child: _isLoadingSummary
+                  ? CircularProgressIndicator()
+                  : Text('Summarize'),
             ),
             ElevatedButton(
               onPressed: _isLoadingSuggestions ? null : _generateSuggestions,
-              child: _isLoadingSuggestions ? CircularProgressIndicator() : Text('AI Suggestions'),
+              child: _isLoadingSuggestions
+                  ? CircularProgressIndicator()
+                  : Text('AI Suggestions'),
             ),
             if (_summary.isNotEmpty)
               Padding(
@@ -294,7 +313,9 @@ class _NoteEditorState extends State<NoteEditor> {
               ),
             if (_suggestionWithFeedback != null)
               ExpansionTile(
-                title: Text('Suggestion', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                title: Text('Suggestion',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 children: [
                   ListTile(
                     title: RichText(
@@ -309,7 +330,11 @@ class _NoteEditorState extends State<NoteEditor> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: Icon(Icons.thumb_up, color: _suggestionWithFeedback!['feedback'] == 'positive' ? Colors.green : Colors.grey),
+                          icon: Icon(Icons.thumb_up,
+                              color: _suggestionWithFeedback!['feedback'] ==
+                                      'positive'
+                                  ? Colors.green
+                                  : Colors.grey),
                           onPressed: () {
                             setState(() {
                               _suggestionWithFeedback!['feedback'] = 'positive';
@@ -317,7 +342,11 @@ class _NoteEditorState extends State<NoteEditor> {
                           },
                         ),
                         IconButton(
-                          icon: Icon(Icons.thumb_down, color: _suggestionWithFeedback!['feedback'] == 'negative' ? Colors.red : Colors.grey),
+                          icon: Icon(Icons.thumb_down,
+                              color: _suggestionWithFeedback!['feedback'] ==
+                                      'negative'
+                                  ? Colors.red
+                                  : Colors.grey),
                           onPressed: () {
                             setState(() {
                               _suggestionWithFeedback!['feedback'] = 'negative';
