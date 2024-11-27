@@ -14,7 +14,7 @@ class NotificationService {
   Future<void> init() async {
     // Android initialization settings
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@mipmap/launcher_icon');
 
     // Initialization settings for all platforms
     const InitializationSettings initializationSettings = InitializationSettings(

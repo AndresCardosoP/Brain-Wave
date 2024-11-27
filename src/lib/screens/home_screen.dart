@@ -100,7 +100,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _navigateToEditor({Note? note}) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => NoteEditor(note: note)),
+      MaterialPageRoute(
+        builder: (context) => NoteEditor(
+          note: note,
+          initialFolderId: _selectedFolder?.id, // Pass the current folder ID
+        ),
+      ),
     );
     _refreshNoteList(); // Refresh notes after returning
   }

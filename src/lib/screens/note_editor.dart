@@ -47,6 +47,11 @@ class _NoteEditorState extends State<NoteEditor> {
       List<Folder> foldersFromDb = await _dbHelper.getFolders();
       setState(() {
         _folders = foldersFromDb;
+        if (widget.note == null && widget.initialFolderId != null) {
+          // Check if the initialFolderId exists in the folders list
+          bool folderExists = foldersFromDb.any((folder) => folder.id == widget.initialFolderId);
+          _selectedFolderId = folderExists ? widget.initialFolderId : null;
+        }
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -201,25 +206,31 @@ class _NoteEditorState extends State<NoteEditor> {
           child: DropdownButton<int?>(
             value: _selectedFolderId,
             dropdownColor: Colors.blue,
-            iconEnabledColor: Colors.white,
             style: const TextStyle(color: Colors.white, fontSize: 18),
+            iconEnabledColor: Colors.white,
+            onChanged: (int? newValue) {
+              setState(() {
+                _selectedFolderId = newValue;
+              });
+            },
             items: [
               DropdownMenuItem<int?>(
                 value: null,
-                child: const Text('No Folder', style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  'Notes',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
-              ..._folders.map((folder) {
+              ..._folders.map<DropdownMenuItem<int?>>((Folder folder) {
                 return DropdownMenuItem<int?>(
                   value: folder.id,
-                  child: Text(folder.name, style: const TextStyle(color: Colors.white)),
+                  child: Text(
+                    folder.name,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 );
               }).toList(),
             ],
-            onChanged: (value) {
-              setState(() {
-                _selectedFolderId = value;
-              });
-            },
           ),
         ),
         actions: [
