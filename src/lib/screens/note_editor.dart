@@ -50,7 +50,8 @@ class _NoteEditorState extends State<NoteEditor> {
         _folders = foldersFromDb;
         if (widget.note == null && widget.initialFolderId != null) {
           // Check if the initialFolderId exists in the folders list
-          bool folderExists = foldersFromDb.any((folder) => folder.id == widget.initialFolderId);
+          bool folderExists = foldersFromDb
+              .any((folder) => folder.id == widget.initialFolderId);
           _selectedFolderId = folderExists ? widget.initialFolderId : null;
         }
       });
@@ -227,14 +228,18 @@ class _NoteEditorState extends State<NoteEditor> {
             items: [
               DropdownMenuItem<int?>(
                 value: null,
-                child:
-                    const Text('Notes', style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  'Notes',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
               ..._folders.map<DropdownMenuItem<int?>>((Folder folder) {
                 return DropdownMenuItem<int?>(
                   value: folder.id,
-                  child: Text(folder.name,
-                      style: const TextStyle(color: Colors.white)),
+                  child: Text(
+                    folder.name,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 );
               }).toList(),
             ],
