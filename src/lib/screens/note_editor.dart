@@ -146,40 +146,35 @@ class _NoteEditorState extends State<NoteEditor> {
   }
 
   // Save the note to the database
-  void _saveNote() async {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _saveNote() async {
+    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')),
+      if (user != null) {
+        Note note = Note(
+          id: widget.note?.id,
+          title: _title,
+          body: _content,
+          userId: user.id,
+          folderId: _selectedFolderId,
+          createdAt: widget.note?.createdAt ?? DateTime.now(),
+          updatedAt: DateTime.now(),
+          hasReminder: widget.note?.hasReminder ?? false,
         );
-        return;
-      }
 
-      Note note = Note(
-        id: widget.note?.id,
-        title: _title,
-        body: _content,
-        userId: user.id,
-        folderId: _selectedFolderId,
-        createdAt: widget.note?.createdAt ?? DateTime.now(),
-        updatedAt: DateTime.now(),
-        hasReminder: widget.note?.hasReminder ?? false,
-      );
-
-      try {
-        if (widget.note == null) {
-          await _dbHelper.insertNote(note);
-        } else {
-          await _dbHelper.updateNote(note);
+        try {
+          if (widget.note == null) {
+            await _dbHelper.insertNote(note);
+          } else {
+            await _dbHelper.updateNote(note);
+          }
+          // Removed Navigator.pop(context);
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error saving note: $e')),
+          );
         }
-        Navigator.pop(context); // This will trigger _refreshNoteList
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving note: $e')),
-        );
       }
     }
   }
@@ -198,149 +193,167 @@ class _NoteEditorState extends State<NoteEditor> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: DropdownButtonHideUnderline(
-          child: DropdownButton<int?>(
-            value: _selectedFolderId,
-            dropdownColor: Colors.blue,
-            style: const TextStyle(color: Colors.white, fontSize: 18),
-            iconEnabledColor: Colors.white,
-            onChanged: (int? newValue) {
-              setState(() {
-                _selectedFolderId = newValue;
-              });
-            },
-            items: [
-              DropdownMenuItem<int?>(
-                value: null,
-                child: const Text(
-                  'Notes',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              ..._folders.map<DropdownMenuItem<int?>>((Folder folder) {
-                return DropdownMenuItem<int?>(
-                  value: folder.id,
-                  child: Text(
-                    folder.name,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                );
-              }).toList(),
-            ],
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save, color: Colors.white),
-            onPressed: _saveNote,
-            tooltip: 'Save Note',
-          ),
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: TextFormField(
-                initialValue: _title,
-                maxLines: 1,
-                decoration: const InputDecoration(
-                  hintText: 'Title',
-                  border: InputBorder.none,
-                ),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                onSaved: (value) => _title = value?.trim() ?? '',
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter a title';
-                  }
-                  return null;
+    // ignore: deprecated_member_use
+    return WillPopScope(
+      onWillPop: () async {
+        await _saveNote();
+        return true; // Allow the pop
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.blue,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: IntrinsicWidth(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<int?>(
+                value: _selectedFolderId,
+                isDense: true,
+                isExpanded: false,
+                dropdownColor: Colors.blue,
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+                iconEnabledColor: Colors.white,
+                onChanged: (int? newValue) {
+                  setState(() {
+                    _selectedFolderId = newValue;
+                  });
                 },
+                selectedItemBuilder: (BuildContext context) {
+                  return [
+                    const Text(
+                      'Notes',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    ..._folders.map<Widget>((Folder folder) {
+                      return Text(
+                        folder.name,
+                        style: const TextStyle(color: Colors.white),
+                      );
+                    }).toList(),
+                  ];
+                },
+                items: [
+                  DropdownMenuItem<int?>(
+                    value: null,
+                    child: const Text(
+                      'Notes',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  ..._folders.map<DropdownMenuItem<int?>>((Folder folder) {
+                    return DropdownMenuItem<int?>(
+                      value: folder.id,
+                      child: Text(
+                        folder.name,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
+                ],
               ),
             ),
-            const Divider(color: Colors.grey, height: 1, thickness: 0.5),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
+          ),
+        ),
+        body: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: TextFormField(
-                  initialValue: _content,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
+                  initialValue: _title,
+                  maxLines: 1,
                   decoration: const InputDecoration(
-                    hintText: 'Start typing your note...',
+                    hintText: 'Title',
                     border: InputBorder.none,
                   ),
-                  style: const TextStyle(fontSize: 16),
-                  onSaved: (value) => _content = value?.trim() ?? '',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  onSaved: (value) => _title = value?.trim() ?? '',
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter some content';
+                      return 'Please enter a title';
                     }
                     return null;
                   },
                 ),
               ),
-            ),
-            ElevatedButton(
-              onPressed: _isLoadingSummary ? null : _summarizeContent,
-              child: _isLoadingSummary ? CircularProgressIndicator() : Text('Summarize'),
-            ),
-            ElevatedButton(
-              onPressed: _isLoadingSuggestions ? null : _generateSuggestions,
-              child: _isLoadingSuggestions ? CircularProgressIndicator() : Text('AI Suggestions'),
-            ),
-            if (_summary.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'Summary: $_summary',
-                  style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+              const Divider(color: Colors.grey, height: 1, thickness: 0.5),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: TextFormField(
+                    initialValue: _content,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
+                    decoration: const InputDecoration(
+                      hintText: 'Start typing your note...',
+                      border: InputBorder.none,
+                    ),
+                    style: const TextStyle(fontSize: 16),
+                    onSaved: (value) => _content = value?.trim() ?? '',
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter some content';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
               ),
-            if (_suggestionWithFeedback != null)
-              ExpansionTile(
-                title: Text('Suggestion', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                children: [
-                  ListTile(
-                    title: RichText(
-                      text: TextSpan(
-                        children: _highlightKeywords(
-                          _suggestionWithFeedback!['text'],
-                          ['task', 'project', 'plan'], // Example keywords
+              ElevatedButton(
+                onPressed: _isLoadingSummary ? null : _summarizeContent,
+                child: _isLoadingSummary ? CircularProgressIndicator() : Text('Summarize'),
+              ),
+              ElevatedButton(
+                onPressed: _isLoadingSuggestions ? null : _generateSuggestions,
+                child: _isLoadingSuggestions ? CircularProgressIndicator() : Text('AI Suggestions'),
+              ),
+              if (_summary.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Summary: $_summary',
+                    style: TextStyle(fontSize: 16, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              if (_suggestionWithFeedback != null)
+                ExpansionTile(
+                  title: Text('Suggestion', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  children: [
+                    ListTile(
+                      title: RichText(
+                        text: TextSpan(
+                          children: _highlightKeywords(
+                            _suggestionWithFeedback!['text'],
+                            ['task', 'project', 'plan'], // Example keywords
+                          ),
                         ),
                       ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.thumb_up, color: _suggestionWithFeedback!['feedback'] == 'positive' ? Colors.green : Colors.grey),
+                            onPressed: () {
+                              setState(() {
+                                _suggestionWithFeedback!['feedback'] = 'positive';
+                              });
+                            },
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.thumb_down, color: _suggestionWithFeedback!['feedback'] == 'negative' ? Colors.red : Colors.grey),
+                            onPressed: () {
+                              setState(() {
+                                _suggestionWithFeedback!['feedback'] = 'negative';
+                              });
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.thumb_up, color: _suggestionWithFeedback!['feedback'] == 'positive' ? Colors.green : Colors.grey),
-                          onPressed: () {
-                            setState(() {
-                              _suggestionWithFeedback!['feedback'] = 'positive';
-                            });
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.thumb_down, color: _suggestionWithFeedback!['feedback'] == 'negative' ? Colors.red : Colors.grey),
-                          onPressed: () {
-                            setState(() {
-                              _suggestionWithFeedback!['feedback'] = 'negative';
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-          ],
+                  ],
+                ),
+            ],
+          ),
         ),
       ),
     );

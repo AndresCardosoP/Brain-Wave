@@ -1,68 +1,12 @@
--- Supabase AI is experimental and may produce incorrect answers
+-- Run this in the SQL editor of your Supabase dashboard
+-- Recommend executing one statement at a time to avoid errors
 -- Always verify the output before executing
 
--- Create the folders table
-create table if not exists
-  folders (
-    id BIGSERIAL primary key,
-    name text not null,
-    user_id uuid not null references auth.users (id) on delete cascade,
-    created_at TIMESTAMPTZ default now(),
-    updated_at TIMESTAMPTZ default now()
-  );
+-- Enable necessary extensions
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create the notes table (if not already created)
-create table if not exists
-  notes (
-    id BIGSERIAL primary key,
-    title text not null,
-    body text,
-    user_id uuid not null references auth.users (id) on delete cascade,
-    folder_id bigint references folders (id) on delete set null,
-    created_at TIMESTAMPTZ default now(),
-    updated_at TIMESTAMPTZ default now(),
-    attachment_path text
-  );
-
--- Function to update the updated_at column
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = NOW();
-   RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Trigger for folders table
-CREATE TRIGGER update_folders_updated_at
-BEFORE UPDATE ON folders
-FOR EACH ROW
-EXECUTE PROCEDURE update_updated_at_column();
---
----- Trigger for notes table
-CREATE TRIGGER update_notes_updated_at
-BEFORE UPDATE ON notes
-FOR EACH ROW
-EXECUTE PROCEDURE update_updated_at_column();
---
----- Enable RLS on folders
-ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
---
----- Policy: Allow owners to select, insert, update, delete their folders
-CREATE POLICY "Folders access policy" ON folders
-    FOR ALL
-    USING (user_id = auth.uid());
- --Enable RLS on notes
-ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
---Policy: Allow owners to select, insert, update, delete their notes
-CREATE POLICY "Notes access policy" ON notes
-    FOR ALL
-    USING (user_id = auth.uid());
-
--- Note: Ensure that the column name for user in notes table matches
--- In your current table, it's named 'user', adjust if necessary
 -- Create the users table in the public schema
-CREATE TABLE if not exists public.users (
+CREATE TABLE IF NOT EXISTS public.users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     auth_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -71,23 +15,59 @@ CREATE TABLE if not exists public.users (
     email TEXT UNIQUE NOT NULL
 );
 
--- Ensure the uuid_generate_v4() function is available
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Create the folders table
+CREATE TABLE IF NOT EXISTS folders (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
-select
-  sum(pg_database_size(pg_database.datname)) / (1024 * 1024) as db_size_mb
-from pg_database;
+-- Create the notes table
+CREATE TABLE IF NOT EXISTS notes (
+    id BIGSERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    body TEXT,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    folder_id BIGINT REFERENCES folders(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    has_reminder BOOLEAN DEFAULT FALSE
+);
 
 -- Create the reminders table
 CREATE TABLE IF NOT EXISTS reminders (
-  id BIGSERIAL PRIMARY KEY,
-  note_id BIGINT NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  reminder_time TIMESTAMPTZ NOT NULL,
-  location TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+    id BIGSERIAL PRIMARY KEY,
+    note_id BIGINT NOT NULL REFERENCES notes(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    reminder_time TIMESTAMPTZ NOT NULL,
+    location TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT unique_note_id UNIQUE (note_id)
 );
+
+-- Function to update the updated_at column for folders and notes
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ LANGUAGE 'plpgsql';
+
+-- Trigger for folders table
+CREATE TRIGGER update_folders_updated_at
+BEFORE UPDATE ON folders
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
+
+-- Trigger for notes table
+CREATE TRIGGER update_notes_updated_at
+BEFORE UPDATE ON notes
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
 
 -- Function to update the updated_at column for reminders
 CREATE OR REPLACE FUNCTION update_reminders_updated_at()
@@ -104,20 +84,31 @@ BEFORE UPDATE ON reminders
 FOR EACH ROW
 EXECUTE PROCEDURE update_reminders_updated_at();
 
--- Enable RLS on reminders
+-- Enable Row Level Security (RLS) on folders
+ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow owners to access their folders
+CREATE POLICY "Folders access policy" ON folders
+    FOR ALL
+    USING (user_id = auth.uid());
+
+-- Enable Row Level Security (RLS) on notes
+ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow owners to access their notes
+CREATE POLICY "Notes access policy" ON notes
+    FOR ALL
+    USING (user_id = auth.uid());
+
+-- Enable Row Level Security (RLS) on reminders
 ALTER TABLE reminders ENABLE ROW LEVEL SECURITY;
 
--- Policy: Allow owners to select, insert, update, delete their reminders
+-- Policy: Allow owners to access their reminders
 CREATE POLICY "Reminders access policy" ON reminders
     FOR ALL
     USING (user_id = auth.uid());
 
--- Add unique constraint to note_id
-ALTER TABLE reminders
-ADD CONSTRAINT unique_note_id UNIQUE (note_id);
-
-ALTER TABLE notes
-ADD COLUMN has_reminder BOOLEAN DEFAULT FALSE;
-
-ALTER TABLE notes
-DROP COLUMN attachment_path;
+-- Calculate the total database size in MB (optional)
+SELECT
+  SUM(pg_database_size(pg_database.datname)) / (1024 * 1024) AS db_size_mb
+FROM pg_database;
