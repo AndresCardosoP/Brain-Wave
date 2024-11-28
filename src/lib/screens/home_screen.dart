@@ -315,7 +315,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: EdgeInsets.zero, // Remove extra padding
               itemCount: _folders.length,
               separatorBuilder: (context, index) =>
-                  const Divider(height: 1, color: Colors.grey),
+                  const SizedBox(height: 1),
               itemBuilder: (context, index) {
                 Folder folder = _folders[index];
                 return ListTile(

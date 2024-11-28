@@ -276,7 +276,7 @@ class _NoteEditorState extends State<NoteEditor> {
                   },
                 ),
               ),
-              const Divider(color: Colors.grey, height: 1, thickness: 0.5),
+              const Divider(color: Colors.grey, height: 0.5, thickness: 0.2),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
