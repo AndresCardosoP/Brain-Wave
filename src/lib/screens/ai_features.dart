@@ -27,8 +27,7 @@ class _AiFeaturesState extends State<AiFeatures> {
       _isLoadingSummary = true;
     });
     try {
-      final summary =
-          await _summarizationService.summarizeText(widget.noteContent);
+      final summary = await _summarizationService.summarizeText(widget.noteContent);
       setState(() {
         _summary = summary;
       });
@@ -48,8 +47,7 @@ class _AiFeaturesState extends State<AiFeatures> {
       _isLoadingSuggestions = true;
     });
     try {
-      final suggestions =
-          await _suggestionService.generateSuggestions(widget.noteContent);
+      final suggestions = await _suggestionService.generateSuggestions(widget.noteContent);
       setState(() {
         _suggestions = suggestions;
       });
@@ -87,89 +85,152 @@ class _AiFeaturesState extends State<AiFeatures> {
           ),
         ],
       ),
-      body: Center(
-        child: _isLoadingSummary || _isLoadingSuggestions
-            ? const CircularProgressIndicator()
-            : _hasResults
-                ? Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            // Center all children horizontally
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Summary Section
+              Center(
+                child: Text(
+                  'Summary',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    color: Colors.blue.shade700,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              if (_isLoadingSummary)
+                const SizedBox(
+                  height: 100.0,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_hasResults)
+                _summary.isNotEmpty
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          border: Border.all(color: Colors.blueAccent),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        child: Text(
+                          _summary,
+                          style: const TextStyle(fontSize: 16.0),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : Container(),
+              if (!_hasResults && !_isLoadingSummary)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 16.0, color: Colors.white),
                       children: [
-                        // Display Summary
-                        if (_summary.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(top: 8.0),
-                            padding: const EdgeInsets.all(12.0),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              border: Border.all(color: Colors.blueAccent),
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: Text(
-                              _summary,
-                              style: const TextStyle(fontSize: 16.0),
-                            ),
+                        const TextSpan(text: 'Tap '),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Icon(
+                            Icons.description,
+                            size: 24.0,
+                            color: Colors.white,
                           ),
-                        const SizedBox(height: 24.0),
-                        // Display Suggestions
-                        if (_suggestions.isNotEmpty)
-                          Expanded(
-                            child: ListView.separated(
-                              itemCount: _suggestions.length,
-                              separatorBuilder: (context, index) =>
-                                  const Divider(),
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  leading: const Icon(Icons.touch_app,
-                                      color: Colors.blue),
-                                  title: Text(_suggestions[index]),
-                                );
-                              },
-                            ),
-                          ),
+                        ),
+                        const TextSpan(text: ' to summarize the note.'),
                       ],
                     ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: RichText(
-                        textAlign: TextAlign.center,
-                        text: TextSpan(
-                          style:
-                              const TextStyle(fontSize: 16.0, color: Colors.white),
-                          children: [
-                            const TextSpan(text: 'Tap '),
-                            WidgetSpan(
-                              alignment: PlaceholderAlignment.middle,
-                              child: Icon(
-                                Icons.description,
-                                size: 24.0,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const TextSpan(
-                                text: ' to summarize the note and '),
-                            WidgetSpan(
-                              alignment: PlaceholderAlignment.middle,
-                              child: Icon(
-                                Icons.lightbulb,
-                                size: 24.0,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const TextSpan(
-                                text: ' to get suggestions for the note.'),
-                          ],
+                  ),
+                ),
+              const SizedBox(height: 32.0), // Increased space between sections
+
+              // Suggestions Section
+              Center(
+                child: Text(
+                  'Suggestions',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    color: Colors.blue.shade700,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              if (_isLoadingSuggestions)
+                const SizedBox(
+                  height: 100.0,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (_hasResults)
+                _suggestions.isNotEmpty
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade50,
+                          border: Border.all(color: Colors.blueAccent),
+                          borderRadius: BorderRadius.circular(8.0),
                         ),
-                      ),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _suggestions.length,
+                          separatorBuilder: (context, index) => const Divider(),
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              leading: const Icon(Icons.touch_app, color: Colors.blue),
+                              title: Text(
+                                _suggestions[index],
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                    : Container(),
+              if (!_hasResults && !_isLoadingSuggestions)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 16.0, color: Colors.white),
+                      children: [
+                        const TextSpan(text: 'Tap '),
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Icon(
+                            Icons.lightbulb,
+                            size: 24.0,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const TextSpan(text: ' to get suggestions for the note.'),
+                      ],
                     ),
                   ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
