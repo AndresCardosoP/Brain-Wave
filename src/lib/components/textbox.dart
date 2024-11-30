@@ -21,14 +21,14 @@ class MyTextFormField extends StatelessWidget {
 
     // Apply scaling for screens under 600 logical pixels
     if (screenHeight < 650) {
-      textSize = 15;
+      textSize = 40;
     }
-    if (screenHeight > 750) {
+    if (screenHeight > 900) {
       textSize = 400;
     }
     if (MediaQuery.of(context).orientation == Orientation.landscape) {
     } else {
-      if (screenHeight > 750) {
+      if (screenHeight > 900) {
         textSize = 150;
       }
     }

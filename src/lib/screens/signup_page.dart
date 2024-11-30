@@ -70,6 +70,14 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    double scaleFactor = 1.0;
+    double logosize = 150.0;
+
+    // Apply scaling for screens under 600 logical pixels
+    if (screenHeight < 650) {
+      scaleFactor = 0.98;
+      logosize = 120.0;
+    }
 
     // Your existing content widget
     Widget content = Column(
@@ -79,7 +87,7 @@ class _SignUpPageState extends State<SignUpPage> {
         // Display an icon at the top
         Icon(
           Icons.waves_sharp,
-          size: 150.0,
+          size: logosize,
           color: Colors.blue,
         ),
         // Display the app's name with styling
@@ -142,7 +150,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
     // Check if the screen is in portrait mode and screen height condition
     if (MediaQuery.of(context).orientation == Orientation.portrait &&
-        screenHeight > 750) {
+        screenHeight > 900) {
       // Add top padding to move content down
       content = Padding(
         padding:
@@ -154,7 +162,10 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          child: content,
+          child: Transform.scale(
+            scale: scaleFactor,
+            child: content,
+          ),
         ),
       ),
     );
