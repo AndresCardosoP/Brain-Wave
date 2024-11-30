@@ -46,8 +46,7 @@ class _FolderViewState extends State<FolderView> {
       return;
     }
     try {
-      List<Note> notes =
-          await _dbHelper.getNotes(folderId: widget.currentFolderId);
+      List<Note> notes = await _dbHelper.getNotes(folderId: widget.currentFolderId);
       setState(() {
         _notes = notes;
       });
@@ -75,9 +74,7 @@ class _FolderViewState extends State<FolderView> {
         title: const Text('Folder Notes'), // App bar title
       ),
       body: _notes.isEmpty
-          ? const Center(
-              child: Text(
-                  'No notes in this folder')) // Display message if no notes
+          ? const Center(child: Text('No notes in this folder')) // Display message if no notes
           : ListView.builder(
               itemCount: _notes.length,
               itemBuilder: (context, index) {

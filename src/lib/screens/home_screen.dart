@@ -830,7 +830,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Location permissions are permanently denied.',
+            'Location permissions are denied.',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.blue,
@@ -911,6 +911,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
+                  color: Colors.blue,
                   border: Border.all(color: Colors.blue, width: 2.0),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
@@ -919,12 +920,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       'No notes available. Tap ',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
-                    Icon(Icons.add, size: 16),
+                    Icon(Icons.add, size: 16, color: Colors.white),
                     Text(
                       ' to add a new note.',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ],
                 ),
