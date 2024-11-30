@@ -31,7 +31,17 @@ class _FolderViewState extends State<FolderView> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not authenticated')),
+        SnackBar(
+          content: Text(
+            'User not authenticated',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
@@ -42,7 +52,17 @@ class _FolderViewState extends State<FolderView> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching notes: $e')),
+        SnackBar(
+          content: Text(
+            'Error fetching notes: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }

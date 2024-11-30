@@ -34,14 +34,34 @@ class _FolderEditState extends State<FolderEdit> {
       // Prevent renaming to "Notes"
       if (_folderName.trim().toLowerCase() == 'notes') {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Folder name "Notes" is reserved.')),
+          SnackBar(
+            content: Text(
+              'Folder name "Notes" is reserved.',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.blue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
         return;
       }
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')),
+          SnackBar(
+            content: Text(
+              'User not authenticated',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.blue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
         return;
       }
@@ -57,7 +77,17 @@ class _FolderEditState extends State<FolderEdit> {
         Navigator.pop(context, true); // Return true to indicate success
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error renaming folder: $e')),
+          SnackBar(
+            content: Text(
+              'Error renaming folder: $e',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.blue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -68,8 +98,17 @@ class _FolderEditState extends State<FolderEdit> {
     // Prevent deleting the default "Notes" folder
     if (widget.folder.name.toLowerCase() == 'notes') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Cannot delete the default "Notes" folder.')),
+        SnackBar(
+          content: Text(
+            'Cannot delete the default "Notes" folder.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }

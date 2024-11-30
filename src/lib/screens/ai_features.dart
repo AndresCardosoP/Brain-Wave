@@ -55,7 +55,17 @@ class _AiFeaturesState extends State<AiFeatures> {
       await _dbHelper.insertAiData(widget.noteId, _summary, _suggestions);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error summarizing content: $e')),
+        SnackBar(
+          content: Text(
+            'Error summarizing content: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       setState(() {
@@ -76,7 +86,17 @@ class _AiFeaturesState extends State<AiFeatures> {
       await _dbHelper.insertAiData(widget.noteId, _summary, _suggestions);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating suggestions: $e')),
+        SnackBar(
+          content: Text(
+            'Error generating suggestions: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       setState(() {
@@ -92,7 +112,17 @@ class _AiFeaturesState extends State<AiFeatures> {
       _suggestions = [];
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('AI data cleared.')),
+      SnackBar(
+        content: Text(
+          'AI data cleared.',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -173,7 +203,7 @@ class _AiFeaturesState extends State<AiFeatures> {
                                     _summary,
                                     style: const TextStyle(
                                         fontSize: 16.0, color: Colors.black),
-                                    textAlign: TextAlign.center,
+                                    textAlign: TextAlign.justify,
                                   ),
                                 )
                               : RichText(

@@ -12,9 +12,13 @@ extension ShowSnackBar on BuildContext {
       SnackBar(
         content: Text(
           text,
-          style: const TextStyle(color: Colors.red),
+          style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.grey,
+        backgroundColor: Colors.blue,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

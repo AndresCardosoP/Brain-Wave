@@ -57,7 +57,17 @@ class _NoteEditorState extends State<NoteEditor> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading folders: $e')),
+        SnackBar(
+          content: Text(
+            'Error loading folders: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       setState(() {
@@ -92,7 +102,17 @@ class _NoteEditorState extends State<NoteEditor> {
           }
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error saving note: $e')),
+            SnackBar(
+              content: Text(
+                'Error saving note: $e',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       }
@@ -158,11 +178,31 @@ Provide a brief description or introduction about the $templateType.
         _contentController.text = generatedContent;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$templateType template generated successfully!')),
+        SnackBar(
+          content: Text(
+            'Successfully generated template for $templateType',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating template: $e')),
+        SnackBar(
+          content: Text(
+            'Error generating template: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -241,7 +281,7 @@ Provide a brief description or introduction about the $templateType.
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.smart_toy, color: Colors.white), // AI suggestion/summarization icon
+              icon: const Icon(Icons.smart_toy_outlined, color: Colors.white), // AI suggestion/summarization icon
               onPressed: () async {
                 await _saveNote();
                 Navigator.push(
