@@ -69,92 +69,92 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen height in logical pixels
     final screenHeight = MediaQuery.of(context).size.height;
-    double scaleFactor = 1.0;
-    double logosize = 150.0;
 
-    // Apply scaling for screens under 600 logical pixels
-    if (screenHeight < 650) {
-      scaleFactor = 0.92;
-      logosize = 120.0;
+    // Your existing content widget
+    Widget content = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Display an icon at the top
+        Icon(
+          Icons.waves_sharp,
+          size: 150.0,
+          color: Colors.blue,
+        ),
+        // Display the app's name with styling
+        const Text('BrainWave',
+            style: TextStyle(
+                fontSize: 50, fontWeight: FontWeight.bold, color: Colors.blue)),
+        // Text fields for user input (First Name, Last Name, Email, Password)
+        MyTextFormField(
+          controller: _firstNameController,
+          label: const Text('First Name'),
+          obscureText: false,
+        ),
+        MyTextFormField(
+          controller: _lastNameController,
+          label: const Text('Last Name'),
+          obscureText: false,
+        ),
+        MyTextFormField(
+          controller: _emailController,
+          label: const Text('Email Address'),
+          obscureText: false,
+        ),
+        MyTextFormField(
+          controller: _passwordController,
+          label: const Text('Password'),
+          obscureText: true,
+        ),
+        MyTextFormField(
+          controller: _confirmPasswordController,
+          label: const Text('Confirm Password'),
+          obscureText: true,
+        ),
+        // Button to trigger user sign-up
+        MyButton(
+          onTap: () async {
+            // Attempt to create a user account with provided input
+            bool success = await createUser(
+              email: _emailController.text,
+              password: _passwordController.text,
+              ConfirmPassword: _confirmPasswordController.text,
+              firstName: _firstNameController.text,
+              lastName: _lastNameController.text,
+            );
+            // Navigate to the home page on successful sign-up
+            if (success) {
+              Navigator.pushNamed(context, '/home');
+            }
+          },
+          child: const Text('Sign Up'), // Button label
+        ),
+        // Text button to navigate to the login page
+        TextButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/login');
+          },
+          child: const Text('Already have an account? Log in'),
+        ),
+      ],
+    );
+
+    // Check if the screen is in portrait mode and screen height condition
+    if (MediaQuery.of(context).orientation == Orientation.portrait &&
+        screenHeight > 750) {
+      // Add top padding to move content down
+      content = Padding(
+        padding:
+            const EdgeInsets.only(top: 220.0), // Adjust the value as needed
+        child: content,
+      );
     }
 
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Transform.scale(
-            scale: scaleFactor,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Display an icon at the top
-                Icon(
-                  Icons.waves_sharp,
-                  size: logosize,
-                  color: Colors.blue,
-                ),
-                // Display the app's name with styling
-                const Text('BrainWave',
-                    style: TextStyle(
-                        fontSize: 50,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue)),
-                // Text fields for user input (First Name, Last Name, Email, Password)
-                MyTextFormField(
-                  controller: _firstNameController,
-                  label: const Text('First Name'),
-                  obscureText: false,
-                ),
-                MyTextFormField(
-                  controller: _lastNameController,
-                  label: const Text('Last Name'),
-                  obscureText: false,
-                ),
-                MyTextFormField(
-                  controller: _emailController,
-                  label: const Text('Email Address'),
-                  obscureText: false,
-                ),
-                MyTextFormField(
-                  controller: _passwordController,
-                  label: const Text('Password'),
-                  obscureText: true,
-                ),
-                MyTextFormField(
-                  controller: _confirmPasswordController,
-                  label: const Text('Confirm Password'),
-                  obscureText: true,
-                ),
-                // Button to trigger user sign-up
-                MyButton(
-                  onTap: () async {
-                    // Attempt to create a user account with provided input
-                    bool success = await createUser(
-                      email: _emailController.text,
-                      password: _passwordController.text,
-                      ConfirmPassword: _confirmPasswordController.text,
-                      firstName: _firstNameController.text,
-                      lastName: _lastNameController.text,
-                    );
-                    // Navigate to the home page on successful sign-up
-                    if (success) {
-                      Navigator.pushNamed(context, '/home');
-                    }
-                  },
-                  child: const Text('Sign Up'), // Button label
-                ),
-                // Text button to navigate to the login page
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/login');
-                  },
-                  child: const Text('Already have an account? Log in'),
-                ),
-              ],
-            ),
-          ),
+          child: content,
         ),
       ),
     );
