@@ -224,13 +224,8 @@ class _AiFeaturesState extends State<AiFeatures> {
                                           children: const [
                                             Icon(
                                               Icons.description,
-                                              size: 28.0,
-                                              color: Colors.black,
-                                            ),
-                                            Icon(
-                                              Icons.description,
                                               size: 24.0,
-                                              color: Colors.white,
+                                              color: Colors.blue,
                                             ),
                                           ],
                                         ),
@@ -311,13 +306,8 @@ class _AiFeaturesState extends State<AiFeatures> {
                                           children: const [
                                             Icon(
                                               Icons.lightbulb,
-                                              size: 28.0,
-                                              color: Colors.black,
-                                            ),
-                                            Icon(
-                                              Icons.lightbulb,
                                               size: 24.0,
-                                              color: Colors.white,
+                                              color: Colors.blue,
                                             ),
                                           ],
                                         ),
