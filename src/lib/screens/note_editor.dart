@@ -241,7 +241,7 @@ Provide a brief description or introduction about the $templateType.
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.auto_awesome, color: Colors.white), // AI suggestion/summarization icon
+              icon: const Icon(Icons.smart_toy, color: Colors.white), // AI suggestion/summarization icon
               onPressed: () async {
                 await _saveNote();
                 Navigator.push(
