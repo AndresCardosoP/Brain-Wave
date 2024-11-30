@@ -23,6 +23,15 @@ class MyTextFormField extends StatelessWidget {
     if (screenHeight < 650) {
       textSize = 15;
     }
+    if (screenHeight > 750) {
+      textSize = 400;
+    }
+    if (MediaQuery.of(context).orientation == Orientation.landscape) {
+    } else {
+      if (screenHeight > 750) {
+        textSize = 150;
+      }
+    }
 
     return Padding(
       // Padding around the text field
