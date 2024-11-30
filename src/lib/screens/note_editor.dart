@@ -19,21 +19,29 @@ class _NoteEditorState extends State<NoteEditor> {
   final _formKey = GlobalKey<FormState>();
   final DBHelper _dbHelper = DBHelper.instance();
 
-  String _title = '';
-  String _content = '';
-  String _summary = '';
-  Map<String, dynamic>? _suggestionWithFeedback;
-  int? _selectedFolderId;
-  List<Folder> _folders = [];
-  bool _isLoadingFolders = true; // Add this flag
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _contentController = TextEditingController();
+
+  String _summary = ''; // Stores the AI-generated summary
+  Map<String, dynamic>? _suggestionWithFeedback; // Stores AI-generated suggestions
+  int? _selectedFolderId; // Tracks the selected folder
+  List<Folder> _folders = []; // List of folders fetched from the database
+  bool _isLoadingFolders = true; // Flag to track folder loading state
 
   @override
   void initState() {
     super.initState();
-    _title = widget.note?.title ?? '';
-    _content = widget.note?.body ?? '';
+    _titleController.text = widget.note?.title ?? '';
+    _contentController.text = widget.note?.body ?? '';
     _selectedFolderId = widget.note?.folderId ?? widget.initialFolderId;
     _loadFoldersFromDb();
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
   }
 
   // Load folders from the database
@@ -43,7 +51,6 @@ class _NoteEditorState extends State<NoteEditor> {
       setState(() {
         _folders = foldersFromDb;
         if (widget.note == null && widget.initialFolderId != null) {
-          // Check if the initialFolderId exists in the folders list
           bool folderExists = foldersFromDb.any((folder) => folder.id == widget.initialFolderId);
           _selectedFolderId = folderExists ? widget.initialFolderId : null;
         }
@@ -59,38 +66,6 @@ class _NoteEditorState extends State<NoteEditor> {
     }
   }
 
-  // Highlight keywords in text
-  List<TextSpan> _highlightKeywords(String text, List<String> keywords) {
-    final spans = <TextSpan>[];
-    int start = 0;
-
-    for (final keyword in keywords) {
-      final lowerKeyword = keyword.toLowerCase();
-      final index = text.toLowerCase().indexOf(lowerKeyword, start);
-
-      if (index == -1) continue;
-
-      // Add normal text before the keyword
-      if (index > start) {
-        spans.add(TextSpan(text: text.substring(start, index), style: TextStyle(color: Colors.black)));
-      }
-
-      // Add highlighted keyword
-      spans.add(TextSpan(
-          text: text.substring(index, index + keyword.length),
-          style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)));
-
-      start = index + keyword.length;
-    }
-
-    // Add the remaining text
-    if (start < text.length) {
-      spans.add(TextSpan(text: text.substring(start), style: TextStyle(color: Colors.black)));
-    }
-
-    return spans;
-  }
-
   // Save the note to the database
   Future<void> _saveNote() async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
@@ -100,8 +75,8 @@ class _NoteEditorState extends State<NoteEditor> {
       if (user != null) {
         Note note = Note(
           id: widget.note?.id,
-          title: _title,
-          body: _content,
+          title: _titleController.text.trim(),
+          body: _contentController.text.trim(),
           userId: user.id,
           folderId: _selectedFolderId,
           createdAt: widget.note?.createdAt ?? DateTime.now(),
@@ -115,13 +90,80 @@ class _NoteEditorState extends State<NoteEditor> {
           } else {
             await _dbHelper.updateNote(note);
           }
-          // Removed Navigator.pop(context);
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error saving note: $e')),
           );
         }
       }
+    }
+  }
+
+  // Show a dialog to input template type
+  Future<String> _showTemplateInputDialog(BuildContext context) async {
+    TextEditingController controller = TextEditingController();
+    String result = '';
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Enter Template Type'),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(hintText: 'e.g., Meeting Notes'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                result = controller.text.trim();
+                Navigator.pop(context);
+              },
+              child: Text('Generate'),
+            ),
+          ],
+        );
+      },
+    );
+    return result;
+  }
+
+  // Generate a detailed template dynamically or fallback to a predefined one
+  Future<void> _generateTemplate(String templateType) async {
+    try {
+      // Simulate a detailed template generation
+      final generatedContent = '''
+# $templateType
+
+## Overview
+Provide a brief description or introduction about the $templateType.
+
+## Key Points
+- Point 1: Description
+- Point 2: Description
+- Point 3: Description
+
+## Detailed Sections
+### Section 1: Title
+[Add details or notes here.]
+
+### Section 2: Title
+[Add details or notes here.]
+
+## Action Items
+- [ ] Task 1
+- [ ] Task 2
+- [ ] Task 3
+''';
+      setState(() {
+        _contentController.text = generatedContent;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$templateType template generated successfully!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error generating template: $e')),
+      );
     }
   }
 
@@ -139,7 +181,6 @@ class _NoteEditorState extends State<NoteEditor> {
       );
     }
 
-    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         await _saveNote();
@@ -200,15 +241,24 @@ class _NoteEditorState extends State<NoteEditor> {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.auto_awesome, color: Colors.white),
+              icon: const Icon(Icons.auto_awesome, color: Colors.white), // AI suggestion/summarization icon
               onPressed: () async {
                 await _saveNote();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AiFeatures(noteContent: _content, noteId: widget.note?.id ?? 0),
+                    builder: (context) => AiFeatures(noteContent: _contentController.text, noteId: widget.note?.id ?? 0),
                   ),
                 );
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.auto_fix_high, color: Colors.white), // Magic wand icon
+              onPressed: () async {
+                String templateType = await _showTemplateInputDialog(context);
+                if (templateType.isNotEmpty) {
+                  _generateTemplate(templateType);
+                }
               },
             ),
           ],
@@ -220,14 +270,13 @@ class _NoteEditorState extends State<NoteEditor> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: TextFormField(
-                  initialValue: _title,
+                  controller: _titleController,
                   maxLines: 1,
                   decoration: const InputDecoration(
                     hintText: 'Title',
                     border: InputBorder.none,
                   ),
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  onSaved: (value) => _title = value?.trim() ?? '',
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter a title';
@@ -241,7 +290,7 @@ class _NoteEditorState extends State<NoteEditor> {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: TextFormField(
-                    initialValue: _content,
+                    controller: _contentController,
                     maxLines: null,
                     keyboardType: TextInputType.multiline,
                     decoration: const InputDecoration(
@@ -249,7 +298,6 @@ class _NoteEditorState extends State<NoteEditor> {
                       border: InputBorder.none,
                     ),
                     style: const TextStyle(fontSize: 16),
-                    onSaved: (value) => _content = value?.trim() ?? '',
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please enter some content';
@@ -272,35 +320,7 @@ class _NoteEditorState extends State<NoteEditor> {
                   title: Text('Suggestion', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   children: [
                     ListTile(
-                      title: RichText(
-                        text: TextSpan(
-                          children: _highlightKeywords(
-                            _suggestionWithFeedback!['text'],
-                            ['task', 'project', 'plan'], // Example keywords
-                          ),
-                        ),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.thumb_up, color: _suggestionWithFeedback!['feedback'] == 'positive' ? Colors.green : Colors.grey),
-                            onPressed: () {
-                              setState(() {
-                                _suggestionWithFeedback!['feedback'] = 'positive';
-                              });
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.thumb_down, color: _suggestionWithFeedback!['feedback'] == 'negative' ? Colors.red : Colors.grey),
-                            onPressed: () {
-                              setState(() {
-                                _suggestionWithFeedback!['feedback'] = 'negative';
-                              });
-                            },
-                          ),
-                        ],
-                      ),
+                      title: Text(_suggestionWithFeedback!['text']),
                     ),
                   ],
                 ),
