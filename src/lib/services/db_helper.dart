@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../models/reminder.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'notification_service.dart';

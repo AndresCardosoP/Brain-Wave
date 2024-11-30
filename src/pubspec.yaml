@@ -37,18 +37,9 @@ dependencies:
   supabase_flutter: any
   timezone: any
   http: any
-  gotrue: any
-  app_settings: any
   sqflite_common_ffi: any
   geolocator: any
   geocoding: any
-  permission_handler: any
-  device_info_plus: any
-  shared_preferences: any
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
 
 dev_dependencies:
   flutter_test:
