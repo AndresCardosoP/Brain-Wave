@@ -104,49 +104,63 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Get the screen height in logical pixels
+    final screenHeight = MediaQuery.of(context).size.height;
+    double scaleFactor = 1.0;
+    double logosize = 150.0;
+
+    // Apply scaling for screens under 600 logical pixels
+    if (screenHeight < 650) {
+      scaleFactor = 0.98;
+      logosize = 120.0;
+    }
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.waves_sharp,
-              size: 150,
-              color: Colors.blue,
-            ),
-            const Text(
-              'BrainWave',
-              style: TextStyle(
-                fontSize: 50,
-                fontWeight: FontWeight.bold,
+        child: Transform.scale(
+          scale: scaleFactor,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.waves_sharp,
+                size: logosize,
                 color: Colors.blue,
               ),
-            ),
-            MyTextFormField(
-              controller: _emailController,
-              label: const Text('Email Address'),
-              obscureText: false,
-            ),
-            MyTextFormField(
-              controller: _passwordController,
-              label: const Text('Password'),
-              obscureText: true,
-            ),
-            MyButton(
-              onTap: isLoading ? null : _handleLogin,
-              child: isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Login'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/signup');
-              },
-              child: const Text("Don't have an account? Sign Up"),
-            ),
-          ],
+              const Text(
+                'BrainWave',
+                style: TextStyle(
+                  fontSize: 50,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              ),
+              MyTextFormField(
+                controller: _emailController,
+                label: const Text('Email Address'),
+                obscureText: false,
+              ),
+              MyTextFormField(
+                controller: _passwordController,
+                label: const Text('Password'),
+                obscureText: true,
+              ),
+              MyButton(
+                onTap: isLoading ? null : _handleLogin,
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Login'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/signup');
+                },
+                child: const Text("Don't have an account? Sign Up"),
+              ),
+            ],
+          ),
         ),
       ),
     );

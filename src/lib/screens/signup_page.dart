@@ -69,78 +69,93 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Get the screen height in logical pixels
+    final screenHeight = MediaQuery.of(context).size.height;
+    double scaleFactor = 1.0;
+    double logosize = 150.0;
+
+    // Apply scaling for screens under 600 logical pixels
+    if (screenHeight < 650) {
+      scaleFactor = 0.92;
+      logosize = 120.0;
+    }
+
     return Scaffold(
-      // Main layout of the Sign-Up Page
-      body: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.center, // Center elements vertically
-        crossAxisAlignment:
-            CrossAxisAlignment.center, // Center elements horizontally
-        children: [
-          // Display an icon at the top
-          const Icon(
-            Icons.waves_sharp,
-            size: 150,
-            color: Colors.blue,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Transform.scale(
+            scale: scaleFactor,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Display an icon at the top
+                Icon(
+                  Icons.waves_sharp,
+                  size: logosize,
+                  color: Colors.blue,
+                ),
+                // Display the app's name with styling
+                const Text('BrainWave',
+                    style: TextStyle(
+                        fontSize: 50,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue)),
+                // Text fields for user input (First Name, Last Name, Email, Password)
+                MyTextFormField(
+                  controller: _firstNameController,
+                  label: const Text('First Name'),
+                  obscureText: false,
+                ),
+                MyTextFormField(
+                  controller: _lastNameController,
+                  label: const Text('Last Name'),
+                  obscureText: false,
+                ),
+                MyTextFormField(
+                  controller: _emailController,
+                  label: const Text('Email Address'),
+                  obscureText: false,
+                ),
+                MyTextFormField(
+                  controller: _passwordController,
+                  label: const Text('Password'),
+                  obscureText: true,
+                ),
+                MyTextFormField(
+                  controller: _confirmPasswordController,
+                  label: const Text('Confirm Password'),
+                  obscureText: true,
+                ),
+                // Button to trigger user sign-up
+                MyButton(
+                  onTap: () async {
+                    // Attempt to create a user account with provided input
+                    bool success = await createUser(
+                      email: _emailController.text,
+                      password: _passwordController.text,
+                      ConfirmPassword: _confirmPasswordController.text,
+                      firstName: _firstNameController.text,
+                      lastName: _lastNameController.text,
+                    );
+                    // Navigate to the home page on successful sign-up
+                    if (success) {
+                      Navigator.pushNamed(context, '/home');
+                    }
+                  },
+                  child: const Text('Sign Up'), // Button label
+                ),
+                // Text button to navigate to the login page
+                TextButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  child: const Text('Already have an account? Log in'),
+                ),
+              ],
+            ),
           ),
-          // Display the app's name with styling
-          const Text('BrainWave',
-              style: TextStyle(
-                  fontSize: 50,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue)),
-          // Text fields for user input (First Name, Last Name, Email, Password)
-          MyTextFormField(
-            controller: _firstNameController,
-            label: const Text('First Name'),
-            obscureText: false,
-          ),
-          MyTextFormField(
-            controller: _lastNameController,
-            label: const Text('Last Name'),
-            obscureText: false,
-          ),
-          MyTextFormField(
-            controller: _emailController,
-            label: const Text('Email Address'),
-            obscureText: false,
-          ),
-          MyTextFormField(
-            controller: _passwordController,
-            label: const Text('Password'),
-            obscureText: true,
-          ),
-          MyTextFormField(
-            controller: _confirmPasswordController,
-            label: const Text('Confirm Password'),
-            obscureText: true,
-          ),
-          // Button to trigger user sign-up
-          MyButton(
-            onTap: () async {
-              // Attempt to create a user account with provided input
-              bool success = await createUser(
-                email: _emailController.text,
-                password: _passwordController.text,
-                ConfirmPassword: _confirmPasswordController.text,
-                firstName: _firstNameController.text,
-                lastName: _lastNameController.text,
-              );
-              // Navigate to the home page on successful sign-up
-              if (success) {
-                Navigator.pushNamed(context, '/home');
-              }
-            },
-            child: const Text('Sign Up'), // Button label
-          ),
-          // Text button to navigate to the login page
-          TextButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/login');
-            },
-            child: const Text('Already have an account? Log in'),
-          ),
-        ],
+        ),
       ),
     );
   }

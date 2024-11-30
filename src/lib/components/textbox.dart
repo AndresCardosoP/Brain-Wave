@@ -16,13 +16,21 @@ class MyTextFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    double textSize = 30;
+
+    // Apply scaling for screens under 600 logical pixels
+    if (screenHeight < 650) {
+      textSize = 15;
+    }
+
     return Padding(
       // Padding around the text field
-      padding: const EdgeInsets.only(
+      padding: EdgeInsets.only(
         top: 25,
         bottom: 5,
-        left: 30,
-        right: 30,
+        left: textSize,
+        right: textSize,
       ),
       child: TextFormField(
         // Assigning the controller to the text field
