@@ -795,8 +795,28 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       drawer: _buildDrawer(),
       body: _notes.isEmpty
-          ? const Center(
-              child: Text('No notes available. Tap "+" to add a new note.'),
+          ? Center(
+              child: Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blue, width: 2.0),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'No notes available. Tap ',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    Icon(Icons.add, size: 16),
+                    Text(
+                      ' to add a new note.',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
             )
           : Padding(
               padding: const EdgeInsets.all(8.0),

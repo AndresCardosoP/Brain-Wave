@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../services/db_helper.dart';
-import '../services/summarization_service.dart';
-import '../services/suggestion_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'ai_features.dart';
 
 class NoteEditor extends StatefulWidget {
   final Note? note; // If null, this is a new note
@@ -19,15 +18,11 @@ class NoteEditor extends StatefulWidget {
 class _NoteEditorState extends State<NoteEditor> {
   final _formKey = GlobalKey<FormState>();
   final DBHelper _dbHelper = DBHelper.instance();
-  final SummarizationService _summarizationService = SummarizationService();
-  final SuggestionService _suggestionService = SuggestionService();
 
   String _title = '';
   String _content = '';
   String _summary = '';
   Map<String, dynamic>? _suggestionWithFeedback;
-  bool _isLoadingSummary = false;
-  bool _isLoadingSuggestions = false;
   int? _selectedFolderId;
   List<Folder> _folders = [];
   bool _isLoadingFolders = true; // Add this flag
@@ -60,55 +55,6 @@ class _NoteEditorState extends State<NoteEditor> {
     } finally {
       setState(() {
         _isLoadingFolders = false; // Update the loading flag
-      });
-    }
-  }
-
-  // Summarize note content
-  Future<void> _summarizeContent() async {
-    setState(() {
-      _isLoadingSummary = true;
-    });
-    try {
-      final summary = await _summarizationService.summarizeText(_content);
-      setState(() {
-        _summary = summary;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error summarizing content: $e')),
-      );
-    } finally {
-      setState(() {
-        _isLoadingSummary = false;
-      });
-    }
-  }
-
-  // Generate a single AI suggestion
-  Future<void> _generateSuggestions() async {
-    setState(() {
-      _isLoadingSuggestions = true;
-    });
-    try {
-      final suggestions = await _suggestionService.generateSuggestions(_content);
-      final filteredSuggestions = suggestions
-          .skip(1) // Skip the first item if it is the header
-          .where((suggestion) => suggestion.trim().isNotEmpty) // Filter out empty suggestions
-          .toList();
-
-      if (filteredSuggestions.isNotEmpty) {
-        setState(() {
-          _suggestionWithFeedback = {'text': filteredSuggestions.first, 'feedback': null}; // Only one suggestion
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating suggestions: $e')),
-      );
-    } finally {
-      setState(() {
-        _isLoadingSuggestions = false;
       });
     }
   }
@@ -252,6 +198,20 @@ class _NoteEditorState extends State<NoteEditor> {
               ),
             ),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.auto_awesome, color: Colors.white),
+              onPressed: () async {
+                await _saveNote();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AiFeatures(noteContent: _content, noteId: widget.note?.id ?? 0),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
         body: Form(
           key: _formKey,
@@ -298,14 +258,6 @@ class _NoteEditorState extends State<NoteEditor> {
                     },
                   ),
                 ),
-              ),
-              ElevatedButton(
-                onPressed: _isLoadingSummary ? null : _summarizeContent,
-                child: _isLoadingSummary ? CircularProgressIndicator() : Text('Summarize'),
-              ),
-              ElevatedButton(
-                onPressed: _isLoadingSuggestions ? null : _generateSuggestions,
-                child: _isLoadingSuggestions ? CircularProgressIndicator() : Text('AI Suggestions'),
               ),
               if (_summary.isNotEmpty)
                 Padding(
