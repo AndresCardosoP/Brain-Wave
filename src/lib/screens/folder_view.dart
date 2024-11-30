@@ -31,18 +31,39 @@ class _FolderViewState extends State<FolderView> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User not authenticated')),
+        SnackBar(
+          content: Text(
+            'User not authenticated',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return;
     }
     try {
-      List<Note> notes = await _dbHelper.getNotes(folderId: widget.currentFolderId);
+      List<Note> notes =
+          await _dbHelper.getNotes(folderId: widget.currentFolderId);
       setState(() {
         _notes = notes;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching notes: $e')),
+        SnackBar(
+          content: Text(
+            'Error fetching notes: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -54,7 +75,9 @@ class _FolderViewState extends State<FolderView> {
         title: const Text('Folder Notes'), // App bar title
       ),
       body: _notes.isEmpty
-          ? const Center(child: Text('No notes in this folder')) // Display message if no notes
+          ? const Center(
+              child: Text(
+                  'No notes in this folder')) // Display message if no notes
           : ListView.builder(
               itemCount: _notes.length,
               itemBuilder: (context, index) {

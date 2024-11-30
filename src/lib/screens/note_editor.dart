@@ -9,7 +9,8 @@ class NoteEditor extends StatefulWidget {
   final Note? note; // If null, this is a new note
   final int? initialFolderId; // Current folder ID
 
-  const NoteEditor({Key? key, this.note, this.initialFolderId}) : super(key: key);
+  const NoteEditor({Key? key, this.note, this.initialFolderId})
+      : super(key: key);
 
   @override
   _NoteEditorState createState() => _NoteEditorState();
@@ -44,13 +45,24 @@ class _NoteEditorState extends State<NoteEditor> {
         _folders = foldersFromDb;
         if (widget.note == null && widget.initialFolderId != null) {
           // Check if the initialFolderId exists in the folders list
-          bool folderExists = foldersFromDb.any((folder) => folder.id == widget.initialFolderId);
+          bool folderExists = foldersFromDb
+              .any((folder) => folder.id == widget.initialFolderId);
           _selectedFolderId = folderExists ? widget.initialFolderId : null;
         }
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading folders: $e')),
+        SnackBar(
+          content: Text(
+            'Error loading folders: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       setState(() {
@@ -72,7 +84,9 @@ class _NoteEditorState extends State<NoteEditor> {
 
       // Add normal text before the keyword
       if (index > start) {
-        spans.add(TextSpan(text: text.substring(start, index), style: TextStyle(color: Colors.black)));
+        spans.add(TextSpan(
+            text: text.substring(start, index),
+            style: TextStyle(color: Colors.black)));
       }
 
       // Add highlighted keyword
@@ -85,7 +99,8 @@ class _NoteEditorState extends State<NoteEditor> {
 
     // Add the remaining text
     if (start < text.length) {
-      spans.add(TextSpan(text: text.substring(start), style: TextStyle(color: Colors.black)));
+      spans.add(TextSpan(
+          text: text.substring(start), style: TextStyle(color: Colors.black)));
     }
 
     return spans;
@@ -118,7 +133,17 @@ class _NoteEditorState extends State<NoteEditor> {
           // Removed Navigator.pop(context);
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error saving note: $e')),
+            SnackBar(
+              content: Text(
+                'Error saving note: $e',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       }
@@ -128,12 +153,14 @@ class _NoteEditorState extends State<NoteEditor> {
   // Build the UI
   @override
   Widget build(BuildContext context) {
-    if (_isLoadingFolders) { // Check the loading flag
+    if (_isLoadingFolders) {
+      // Check the loading flag
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.blue,
           iconTheme: const IconThemeData(color: Colors.white),
-          title: const Text('Loading...', style: TextStyle(color: Colors.white)),
+          title:
+              const Text('Loading...', style: TextStyle(color: Colors.white)),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -206,7 +233,8 @@ class _NoteEditorState extends State<NoteEditor> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AiFeatures(noteContent: _content, noteId: widget.note?.id ?? 0),
+                    builder: (context) => AiFeatures(
+                        noteContent: _content, noteId: widget.note?.id ?? 0),
                   ),
                 );
               },
@@ -218,7 +246,8 @@ class _NoteEditorState extends State<NoteEditor> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: TextFormField(
                   initialValue: _title,
                   maxLines: 1,
@@ -226,7 +255,8 @@ class _NoteEditorState extends State<NoteEditor> {
                     hintText: 'Title',
                     border: InputBorder.none,
                   ),
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
                   onSaved: (value) => _title = value?.trim() ?? '',
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -269,7 +299,9 @@ class _NoteEditorState extends State<NoteEditor> {
                 ),
               if (_suggestionWithFeedback != null)
                 ExpansionTile(
-                  title: Text('Suggestion', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  title: Text('Suggestion',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   children: [
                     ListTile(
                       title: RichText(
@@ -284,18 +316,28 @@ class _NoteEditorState extends State<NoteEditor> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            icon: Icon(Icons.thumb_up, color: _suggestionWithFeedback!['feedback'] == 'positive' ? Colors.green : Colors.grey),
+                            icon: Icon(Icons.thumb_up,
+                                color: _suggestionWithFeedback!['feedback'] ==
+                                        'positive'
+                                    ? Colors.green
+                                    : Colors.grey),
                             onPressed: () {
                               setState(() {
-                                _suggestionWithFeedback!['feedback'] = 'positive';
+                                _suggestionWithFeedback!['feedback'] =
+                                    'positive';
                               });
                             },
                           ),
                           IconButton(
-                            icon: Icon(Icons.thumb_down, color: _suggestionWithFeedback!['feedback'] == 'negative' ? Colors.red : Colors.grey),
+                            icon: Icon(Icons.thumb_down,
+                                color: _suggestionWithFeedback!['feedback'] ==
+                                        'negative'
+                                    ? Colors.red
+                                    : Colors.grey),
                             onPressed: () {
                               setState(() {
-                                _suggestionWithFeedback!['feedback'] = 'negative';
+                                _suggestionWithFeedback!['feedback'] =
+                                    'negative';
                               });
                             },
                           ),

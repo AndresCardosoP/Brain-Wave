@@ -9,7 +9,8 @@ class AiFeatures extends StatefulWidget {
   final String noteContent;
   final int noteId; // Added noteId to link with database
 
-  const AiFeatures({Key? key, required this.noteContent, required this.noteId}) : super(key: key);
+  const AiFeatures({Key? key, required this.noteContent, required this.noteId})
+      : super(key: key);
 
   @override
   _AiFeaturesState createState() => _AiFeaturesState();
@@ -48,14 +49,25 @@ class _AiFeaturesState extends State<AiFeatures> {
       _isLoadingSummary = true;
     });
     try {
-      final summary = await _summarizationService.summarizeText(widget.noteContent);
+      final summary =
+          await _summarizationService.summarizeText(widget.noteContent);
       setState(() {
         _summary = summary;
       });
       await _dbHelper.insertAiData(widget.noteId, _summary, _suggestions);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error summarizing content: $e')),
+        SnackBar(
+          content: Text(
+            'Error summarizing content: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       setState(() {
@@ -69,14 +81,25 @@ class _AiFeaturesState extends State<AiFeatures> {
       _isLoadingSuggestions = true;
     });
     try {
-      final suggestions = await _suggestionService.generateSuggestions(widget.noteContent);
+      final suggestions =
+          await _suggestionService.generateSuggestions(widget.noteContent);
       setState(() {
         _suggestions = suggestions;
       });
       await _dbHelper.insertAiData(widget.noteId, _summary, _suggestions);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating suggestions: $e')),
+        SnackBar(
+          content: Text(
+            'Error generating suggestions: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } finally {
       setState(() {
@@ -92,7 +115,17 @@ class _AiFeaturesState extends State<AiFeatures> {
       _suggestions = [];
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('AI data cleared.')),
+      SnackBar(
+        content: Text(
+          'AI data cleared.',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 
@@ -139,7 +172,8 @@ class _AiFeaturesState extends State<AiFeatures> {
                 children: [
                   // Heading with Clear Icon
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center, // Center the heading
+                    mainAxisAlignment:
+                        MainAxisAlignment.center, // Center the heading
                     children: [
                       Expanded(
                         child: Text(
@@ -201,7 +235,8 @@ class _AiFeaturesState extends State<AiFeatures> {
                                           ],
                                         ),
                                       ),
-                                      const TextSpan(text: ' to summarize the note.'),
+                                      const TextSpan(
+                                          text: ' to summarize the note.'),
                                     ],
                                   ),
                                 ),
@@ -256,7 +291,8 @@ class _AiFeaturesState extends State<AiFeatures> {
                                           color: Colors.blue),
                                       title: Text(
                                         _suggestions[index],
-                                        style: const TextStyle(color: Colors.black),
+                                        style: const TextStyle(
+                                            color: Colors.black),
                                       ),
                                     );
                                   },
@@ -286,7 +322,8 @@ class _AiFeaturesState extends State<AiFeatures> {
                                           ],
                                         ),
                                       ),
-                                      const TextSpan(text: ' to get suggestions.'),
+                                      const TextSpan(
+                                          text: ' to get suggestions.'),
                                     ],
                                   ),
                                 ),

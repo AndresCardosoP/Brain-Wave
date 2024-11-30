@@ -67,7 +67,17 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       // Handle error (e.g., show a snackbar)
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching folders: $e')),
+        SnackBar(
+          content: Text(
+            'Error fetching folders: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -91,7 +101,17 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       // Handle error (e.g., show a snackbar)
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching notes: $e')),
+        SnackBar(
+          content: Text(
+            'Error fetching notes: $e',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     }
   }
@@ -153,8 +173,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Prevent creating a folder named "Notes"
                 if (folderName.trim().toLowerCase() == 'notes') {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Folder name "Notes" is reserved.')),
+                    SnackBar(
+                      content: Text(
+                        'Folder name "Notes" is reserved.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                    ),
                   );
                   return;
                 }
@@ -203,8 +232,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Prevent renaming to "Notes"
                   if (newFolderName.trim().toLowerCase() == 'notes') {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Folder name "Notes" is reserved.')),
+                      SnackBar(
+                        content: Text(
+                          'Folder name "Notes" is reserved.',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                      ),
                     );
                     return;
                   }
@@ -314,8 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.separated(
               padding: EdgeInsets.zero, // Remove extra padding
               itemCount: _folders.length,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(height: 1),
+              separatorBuilder: (context, index) => const SizedBox(height: 1),
               itemBuilder: (context, index) {
                 Folder folder = _folders[index];
                 return ListTile(
@@ -466,114 +503,135 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _toggleReminder(Note note) async {
-  if (note.hasReminder) {
-    bool? confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Reminder?'),
-        content: const Text('Are you sure you want to delete the reminder?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await _dbHelper.deleteReminder(note.id!);
-        await _dbHelper.updateNoteReminderStatus(note.id!, false);
-        setState(() {
-          note.hasReminder = false;
-        });
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting reminder: $e')),
-        );
-      }
-    }
-  } else {
-    DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(minutes: 1)),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-
-    if (pickedDate != null) {
-      TimeOfDay? pickedTime = await showTimePicker(
+    if (note.hasReminder) {
+      bool? confirm = await showDialog<bool>(
         context: context,
-        initialTime: TimeOfDay.now(),
+        builder: (context) => AlertDialog(
+          title: const Text('Delete Reminder?'),
+          content: const Text('Are you sure you want to delete the reminder?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
       );
 
-      if (pickedTime != null) {
-        DateTime reminderDateTime = DateTime(
-          pickedDate.year,
-          pickedDate.month,
-          pickedDate.day,
-          pickedTime.hour,
-          pickedTime.minute,
-        );
-
-        // Ask if the user wants to add a location
-        bool? addLocation = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Add Location'),
-            content: const Text('Would you like to add a location to this reminder?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Yes'),
+      if (confirm == true) {
+        try {
+          await _dbHelper.deleteReminder(note.id!);
+          await _dbHelper.updateNoteReminderStatus(note.id!, false);
+          setState(() {
+            note.hasReminder = false;
+          });
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error deleting reminder: $e',
+                style: TextStyle(color: Colors.white),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('No'),
+              backgroundColor: Colors.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
               ),
-            ],
-          ),
-        );
-
-        String? location;
-        if (addLocation == true) {
-          // Choose between manual entry or current location
-          location = await _promptForLocation();
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
+      }
+    } else {
+      DateTime? pickedDate = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now().add(const Duration(minutes: 1)),
+        firstDate: DateTime.now(),
+        lastDate: DateTime(2100),
+      );
 
-        final user = Supabase.instance.client.auth.currentUser;
-        if (user != null) {
-          try {
-            Reminder reminder = Reminder(
-              id: DateTime.now().millisecondsSinceEpoch, // Ensure unique ID
-              noteId: note.id!,
-              userId: user.id,
-              reminderTime: reminderDateTime,
-              location: location,
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            );
+      if (pickedDate != null) {
+        TimeOfDay? pickedTime = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.now(),
+        );
 
-            await _dbHelper.insertReminder(reminder);
-            await _dbHelper.updateNoteReminderStatus(note.id!, true);
-            setState(() {
-              note.hasReminder = true;
-            });
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error adding reminder: $e')),
-            );
+        if (pickedTime != null) {
+          DateTime reminderDateTime = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+
+          // Ask if the user wants to add a location
+          bool? addLocation = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Add Location'),
+              content: const Text(
+                  'Would you like to add a location to this reminder?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Yes'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('No'),
+                ),
+              ],
+            ),
+          );
+
+          String? location;
+          if (addLocation == true) {
+            // Choose between manual entry or current location
+            location = await _promptForLocation();
+          }
+
+          final user = Supabase.instance.client.auth.currentUser;
+          if (user != null) {
+            try {
+              Reminder reminder = Reminder(
+                id: DateTime.now().millisecondsSinceEpoch, // Ensure unique ID
+                noteId: note.id!,
+                userId: user.id,
+                reminderTime: reminderDateTime,
+                location: location,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              );
+
+              await _dbHelper.insertReminder(reminder);
+              await _dbHelper.updateNoteReminderStatus(note.id!, true);
+              setState(() {
+                note.hasReminder = true;
+              });
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Error adding reminder: $e',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
           }
         }
       }
     }
   }
-}
 
   Future<DateTime?> showDateTimePicker(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
@@ -603,138 +661,192 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<String?> _promptForLocation() async {
-  String? location;
-  await showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Add Location'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ElevatedButton(
-              onPressed: () async {
-                // Get current location
-                try {
-                  LocationPermission permission = await Geolocator.checkPermission();
-                  if (permission == LocationPermission.denied ||
-                      permission == LocationPermission.deniedForever) {
-                    permission = await Geolocator.requestPermission();
-                    if (permission != LocationPermission.whileInUse &&
-                        permission != LocationPermission.always) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Location permissions are denied')),
-                      );
-                      return;
+    String? location;
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add Location'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton(
+                onPressed: () async {
+                  // Get current location
+                  try {
+                    LocationPermission permission =
+                        await Geolocator.checkPermission();
+                    if (permission == LocationPermission.denied ||
+                        permission == LocationPermission.deniedForever) {
+                      permission = await Geolocator.requestPermission();
+                      if (permission != LocationPermission.whileInUse &&
+                          permission != LocationPermission.always) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Location permissions are denied',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.0),
+                            ),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
                     }
+
+                    Position position = await Geolocator.getCurrentPosition(
+                        desiredAccuracy: LocationAccuracy.high);
+
+                    // (Optional) Convert position to address using Geocoding
+                    List<Placemark> placemarks = await GeocodingPlatform
+                        .instance!
+                        .placemarkFromCoordinates(
+                            position.latitude, position.longitude);
+                    if (placemarks.isNotEmpty) {
+                      Placemark placemark = placemarks.first;
+                      location =
+                          '${placemark.street}, ${placemark.locality}, ${placemark.country}';
+                    } else {
+                      location =
+                          'Lat: ${position.latitude}, Lon: ${position.longitude}';
+                    }
+
+                    Navigator.of(context).pop();
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Error getting location: $e',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: Colors.blue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
                   }
-
-                  Position position = await Geolocator.getCurrentPosition(
-                      desiredAccuracy: LocationAccuracy.high);
-
-                  // (Optional) Convert position to address using Geocoding
-                  List<Placemark> placemarks = await GeocodingPlatform.instance!
-                      .placemarkFromCoordinates(position.latitude, position.longitude);
-                  if (placemarks.isNotEmpty) {
-                    Placemark placemark = placemarks.first;
-                    location =
-                        '${placemark.street}, ${placemark.locality}, ${placemark.country}';
-                  } else {
-                    location = 'Lat: ${position.latitude}, Lon: ${position.longitude}';
-                  }
-
-                  Navigator.of(context).pop();
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error getting location: $e')),
-                  );
-                }
-              },
-              child: const Text('Use Current Location'),
-            ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () async {
-                // Manual entry
-                TextEditingController controller = TextEditingController();
-                await showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Enter Location'),
-                    content: TextField(
-                      controller: controller,
-                      decoration: const InputDecoration(hintText: 'Enter location'),
+                },
+                child: const Text('Use Current Location'),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () async {
+                  // Manual entry
+                  TextEditingController controller = TextEditingController();
+                  await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Enter Location'),
+                      content: TextField(
+                        controller: controller,
+                        decoration:
+                            const InputDecoration(hintText: 'Enter location'),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            location = controller.text;
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('OK'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                      ],
                     ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          location = controller.text;
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('OK'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('Cancel'),
-                      ),
-                    ],
-                  ),
-                );
-                Navigator.of(context).pop();
-              },
-              child: const Text('Enter Manually'),
+                  );
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Enter Manually'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      );
-    },
-  );
-  return location;
-}
-
-  Future<String?> _getCurrentLocation() async {
-  // Check if location services are enabled
-  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  if (!serviceEnabled) {
-    // Location services are not enabled, prompt the user
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Location services are disabled.')),
+        );
+      },
     );
-    return null;
+    return location;
   }
 
-  // Check location permissions
-  LocationPermission permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
+  Future<String?> _getCurrentLocation() async {
+    // Check if location services are enabled
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled, prompt the user
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Location permissions are denied.')),
+        SnackBar(
+          content: Text(
+            'Location services are disabled.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       return null;
     }
-  }
 
-  if (permission == LocationPermission.deniedForever) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content: Text('Location permissions are permanently denied.')),
-    );
-    return null;
-  }
+    // Check location permissions
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Location permissions are denied.',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.blue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return null;
+      }
+    }
 
-  // Get the current position
-  Position position = await Geolocator.getCurrentPosition();
-  return '${position.latitude},${position.longitude}';
-}
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Location permissions are permanently denied.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.0),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return null;
+    }
+
+    // Get the current position
+    Position position = await Geolocator.getCurrentPosition();
+    return '${position.latitude},${position.longitude}';
+  }
 
   // Build the UI
   @override
