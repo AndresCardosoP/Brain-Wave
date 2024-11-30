@@ -206,7 +206,7 @@ class _NoteEditorState extends State<NoteEditor> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AiFeatures(noteContent: _content),
+                    builder: (context) => AiFeatures(noteContent: _content, noteId: widget.note?.id ?? 0),
                   ),
                 );
               },
