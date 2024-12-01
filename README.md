@@ -66,6 +66,7 @@ BrainWave is a versatile note-taking application designed to help you organize y
 ### AI Features
 - Summarize your note and get answers to questions you might have in the note
 - Use suggestions to get ideas for topics your note discusses
+- Use template to provide a general outline of any topic of your choosing
 
 ### Search
 - Search for notes within a folder using the search bar.
@@ -90,22 +91,37 @@ To install and run the application, follow these steps:
 > **Note:** You must have flutter installed to run the application, follow this documentation if needed: https://docs.flutter.dev/get-started/install
 
 ### Login Page
-On the login page, you can enter your email and password if you already have an account. If you incorrectly type your password, an error message will appear in the snackbar indicating that the password is incorrect. However, if you enter your email and password correctly, you will be navigated to the home page.
+The login page allows users with existing accounts to authenticate by entering 
+their email and password. In the event of an incorrect password entry, a snackbar 
+will display an error message indicating that the password is invalid. Conversely, 
+upon entering the correct email and password, users will be successfully redirected 
+to the home page.
 
 ### Sign Up
-If you don't have an account, you can tap the sign-up link on the login page to navigate to the sign-up page. Here, you can create an account by providing your first name, last name, email, password, and confirming your password. Ensure that both passwords match before creating an account; otherwise, an error message will appear in the snackbar indicating that the passwords do not match. Additionally, if you try to create an account with an email that is already in use, an error message will appear in the snackbar indicating that the email is already in use.
+
+If you do not have an account, you may select the sign-up link on the login page to 
+proceed to the registration page. On this page, you can create an account by entering 
+your first name, last name, email, password, and confirming your password. Ensure the 
+password and confirmation match; otherwise, a snackbar will display an error message 
+indicating a mismatch. Furthermore, attempting to register with an email already in 
+use will prompt a snackbar error message indicating that the email is already 
+associated with an existing account.
 
 ## Usage
+
+### Account to Test App
+Email: user@testuser.com <br/> 
+Password: 123456
 
 ### Creating a Note
 1. Tap on the **`+`** button to create a new note.
 2. Enter the **title** and **content** for your note.
-3. Tap **Save** to add the note to your list.
+3. Tap **back** to add the note to your list.
 
 ### Editing a Note
 1. Tap on an existing note to open it.
 2. Make the desired changes to the title or content.
-3. Tap **Save** to update the note, or tap **Back** to discard changes.
+3. Tap **Back** to auto save your changes.
 
 ### Managing Folders
 1. Open the sidebar by tapping the icon on the top left.
@@ -181,6 +197,29 @@ If you don't have an account, you can tap the sign-up link on the login page to 
 
 #### Empty Folders
 ![Empty Folders](screenshots/EmptyFolders.png)
+
+### Reminders
+
+#### Notification from App
+![Notification](screenshots/Notification.png)
+
+### Snackbars
+
+#### Added Reminder
+![Added Reminder](screenshots/SBreminderAdded.png)
+#### Deleted Reminder
+![Deleted Reminder](screenshots/SBreminderDeleted.png)
+#### Email Already in Use
+![Email Already in Use](screenshots/SBuserExists.png)
+#### Inccorect Login Information
+![Inccorect Login Information](screenshots/SBinvalidLogin.png)
+#### Deleted Forlder
+![Deleted Forlder](screenshots/SBdeletedFolder.png)
+#### Deleted Note
+![Deleted Note](screenshots/SBnoteDeleted.png)
+#### Folder name 'Notes' already Exists
+![Folder name Notes already Exists](screenshots/SBnotesFolder.png)
+
 
 ## License
 This project is licensed under the [MIT License](LICENSE).
