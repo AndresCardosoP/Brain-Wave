@@ -334,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.notes, color: Colors.black),
+            leading: const Icon(Icons.home, color: Colors.blue,),
             title: const Text(
               'Notes',
               style: TextStyle(color: Colors.black),
@@ -895,11 +895,29 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
-              Supabase.instance.client.auth.signOut();
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/',
-                (route) => false,
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Are you sure you want to log out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Supabase.instance.client.auth.signOut();
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/',
+                          (route) => false,
+                        );
+                      },
+                      child: const Text('Yes'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('No'),
+                    ),
+                  ],
+                ),
               );
             },
           ),

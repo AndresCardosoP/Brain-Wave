@@ -96,16 +96,20 @@ class DBHelper {
 
   // ********** Notes CRUD Operations **********
 
-  Future<void> insertNote(Note note) async {
+  Future<Note> insertNote(Note note) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
-      await supabase.from('notes').insert({
+      final response = await supabase.from('notes').insert({
         'title': note.title,
         'body': note.body,
         'user_id': user.id,
         'folder_id': note.folderId,
         'has_reminder': note.hasReminder,
-      });
+      }).select().single();
+
+      return Note.fromMap(response);
+    } else {
+      throw Exception('User not authenticated');
     }
   }
 

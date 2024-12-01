@@ -277,7 +277,7 @@ class _AiFeaturesState extends State<AiFeatures> {
                                       const Divider(),
                                   itemBuilder: (context, index) {
                                     return ListTile(
-                                      leading: const Icon(Icons.touch_app,
+                                      leading: const Icon(Icons.lightbulb,
                                           color: Colors.blue),
                                       title: Text(
                                         _suggestions[index],

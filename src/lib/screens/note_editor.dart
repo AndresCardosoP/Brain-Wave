@@ -5,11 +5,12 @@ import '../services/db_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ai_features.dart';
 
+// ignore: must_be_immutable
 class NoteEditor extends StatefulWidget {
-  final Note? note; // If null, this is a new note
+  Note? note; // If null, this is a new note
   final int? initialFolderId; // Current folder ID
 
-  const NoteEditor({Key? key, this.note, this.initialFolderId}) : super(key: key);
+  NoteEditor({Key? key, this.note, this.initialFolderId}) : super(key: key);
 
   @override
   _NoteEditorState createState() => _NoteEditorState();
@@ -79,11 +80,10 @@ class _NoteEditorState extends State<NoteEditor> {
   // Save the note to the database
   Future<void> _saveNote() async {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-
       final user = Supabase.instance.client.auth.currentUser;
+
       if (user != null) {
-        Note note = Note(
+        Note newNote = Note(
           id: widget.note?.id,
           title: _titleController.text.trim(),
           body: _contentController.text.trim(),
@@ -94,26 +94,15 @@ class _NoteEditorState extends State<NoteEditor> {
           hasReminder: widget.note?.hasReminder ?? false,
         );
 
-        try {
-          if (widget.note == null) {
-            await _dbHelper.insertNote(note);
-          } else {
-            await _dbHelper.updateNote(note);
-          }
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Error saving note: $e',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+        if (widget.note == null) {
+          // New note
+          Note insertedNote = await _dbHelper.insertNote(newNote);
+          setState(() {
+            widget.note = insertedNote;
+          });
+        } else {
+          // Existing note
+          await _dbHelper.updateNote(newNote);
         }
       }
     }
