@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/note.dart';
 import '../models/folder.dart';
 import '../models/reminder.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
 import 'notification_service.dart';
@@ -97,16 +96,20 @@ class DBHelper {
 
   // ********** Notes CRUD Operations **********
 
-  Future<void> insertNote(Note note) async {
+  Future<Note> insertNote(Note note) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
-      await supabase.from('notes').insert({
+      final response = await supabase.from('notes').insert({
         'title': note.title,
         'body': note.body,
         'user_id': user.id,
         'folder_id': note.folderId,
         'has_reminder': note.hasReminder,
-      });
+      }).select().single();
+
+      return Note.fromMap(response);
+    } else {
+      throw Exception('User not authenticated');
     }
   }
 

@@ -131,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Confirm deletion of a note
-  void _deleteNoteConfirm(int id) {
+  Future<void> _deleteNoteConfirm(int id) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -140,9 +140,40 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () async {
-              await _dbHelper.deleteNote(id);
-              Navigator.pop(context);
-              _refreshNoteList();
+              try {
+                await _dbHelper.deleteNote(id);
+                Navigator.pop(context);
+                _refreshNoteList();
+                // Show success SnackBar for deleting note
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Note deleted successfully.',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Error deleting note: $e',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -156,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Add a new folder
-  void _addFolder() {
+  Future<void> _addFolder() async {
     String folderName = '';
     showDialog(
       context: context,
@@ -187,16 +218,46 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                   return;
                 }
-                await _dbHelper.insertFolder(Folder(
-                  id: DateTime.now()
-                      .millisecondsSinceEpoch, // provide a unique id
-                  name: folderName.trim(),
-                  userId: 'your_user_id', // replace with actual user id
-                  createdAt: DateTime.now(),
-                  updatedAt: DateTime.now(),
-                ));
-                Navigator.pop(context);
-                _refreshFolderList();
+                try {
+                  await _dbHelper.insertFolder(Folder(
+                    id: DateTime.now().millisecondsSinceEpoch, // provide a unique id
+                    name: folderName.trim(),
+                    userId: 'your_user_id', // replace with actual user id
+                    createdAt: DateTime.now(),
+                    updatedAt: DateTime.now(),
+                  ));
+                  Navigator.pop(context);
+                  _refreshFolderList();
+                  // Show success SnackBar for adding folder
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Folder added successfully.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } catch (e) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Error adding folder: $e',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16.0),
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               }
             },
             child: const Text('Add'),
@@ -270,7 +331,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Confirm deletion of a folder
-  void _deleteFolderConfirm(int id) {
+  Future<void> _deleteFolderConfirm(int id) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -280,13 +341,44 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () async {
-              await _dbHelper.deleteFolder(id);
-              Navigator.pop(context);
-              setState(() {
-                _selectedFolder = null;
-              });
-              _refreshFolderList();
-              _refreshNoteList();
+              try {
+                await _dbHelper.deleteFolder(id);
+                Navigator.pop(context);
+                setState(() {
+                  _selectedFolder = null;
+                });
+                _refreshFolderList();
+                _refreshNoteList();
+                // Show success SnackBar for deleting folder
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Folder deleted successfully.',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Error deleting folder: $e',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16.0),
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -334,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.notes, color: Colors.black),
+            leading: const Icon(Icons.home, color: Colors.blue,),
             title: const Text(
               'Notes',
               style: TextStyle(color: Colors.black),
@@ -529,6 +621,20 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             note.hasReminder = false;
           });
+          // Show success SnackBar for deleting reminder
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Reminder deleted successfully.',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16.0),
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -612,6 +718,20 @@ class _HomeScreenState extends State<HomeScreen> {
               setState(() {
                 note.hasReminder = true;
               });
+              // Show success SnackBar for adding reminder
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Reminder added successfully.',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16.0),
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             } catch (e) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -895,11 +1015,29 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
-              Supabase.instance.client.auth.signOut();
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/',
-                (route) => false,
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Are you sure you want to log out?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Supabase.instance.client.auth.signOut();
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/',
+                          (route) => false,
+                        );
+                      },
+                      child: const Text('Yes'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('No'),
+                    ),
+                  ],
+                ),
               );
             },
           ),

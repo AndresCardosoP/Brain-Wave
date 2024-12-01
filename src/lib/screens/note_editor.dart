@@ -5,11 +5,12 @@ import '../services/db_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'ai_features.dart';
 
+// ignore: must_be_immutable
 class NoteEditor extends StatefulWidget {
-  final Note? note; // If null, this is a new note
+  Note? note; // If null, this is a new note
   final int? initialFolderId; // Current folder ID
 
-  const NoteEditor({Key? key, this.note, this.initialFolderId}) : super(key: key);
+  NoteEditor({Key? key, this.note, this.initialFolderId}) : super(key: key);
 
   @override
   _NoteEditorState createState() => _NoteEditorState();
@@ -78,14 +79,18 @@ class _NoteEditorState extends State<NoteEditor> {
 
   // Save the note to the database
   Future<void> _saveNote() async {
-    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-
+    if (_contentController.text.trim().isNotEmpty) {
       final user = Supabase.instance.client.auth.currentUser;
+
       if (user != null) {
-        Note note = Note(
+        String title = _titleController.text.trim();
+        if (title.isEmpty) {
+          title = 'Untitled';
+        }
+
+        Note newNote = Note(
           id: widget.note?.id,
-          title: _titleController.text.trim(),
+          title: title,
           body: _contentController.text.trim(),
           userId: user.id,
           folderId: _selectedFolderId,
@@ -94,26 +99,15 @@ class _NoteEditorState extends State<NoteEditor> {
           hasReminder: widget.note?.hasReminder ?? false,
         );
 
-        try {
-          if (widget.note == null) {
-            await _dbHelper.insertNote(note);
-          } else {
-            await _dbHelper.updateNote(note);
-          }
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Error saving note: $e',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+        if (widget.note == null) {
+          // New note
+          Note insertedNote = await _dbHelper.insertNote(newNote);
+          setState(() {
+            widget.note = insertedNote;
+          });
+        } else {
+          // Existing note
+          await _dbHelper.updateNote(newNote);
         }
       }
     }
@@ -317,12 +311,15 @@ Provide a brief description or introduction about the $templateType.
                     border: InputBorder.none,
                   ),
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  // Remove or comment out the validator
+                  /*
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter a title';
                     }
                     return null;
                   },
+                  */
                 ),
               ),
               const Divider(color: Colors.grey, height: 0.5, thickness: 0.2),
