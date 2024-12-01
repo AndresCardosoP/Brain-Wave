@@ -79,13 +79,18 @@ class _NoteEditorState extends State<NoteEditor> {
 
   // Save the note to the database
   Future<void> _saveNote() async {
-    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
+    if (_contentController.text.trim().isNotEmpty) {
       final user = Supabase.instance.client.auth.currentUser;
 
       if (user != null) {
+        String title = _titleController.text.trim();
+        if (title.isEmpty) {
+          title = 'Untitled';
+        }
+
         Note newNote = Note(
           id: widget.note?.id,
-          title: _titleController.text.trim(),
+          title: title,
           body: _contentController.text.trim(),
           userId: user.id,
           folderId: _selectedFolderId,
@@ -306,12 +311,15 @@ Provide a brief description or introduction about the $templateType.
                     border: InputBorder.none,
                   ),
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  // Remove or comment out the validator
+                  /*
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter a title';
                     }
                     return null;
                   },
+                  */
                 ),
               ),
               const Divider(color: Colors.grey, height: 0.5, thickness: 0.2),
