@@ -37,9 +37,11 @@
   - [Reminders](#reminders-1)
     - [Setting Reminders](#setting-reminders-1)
     - [Delete Reminder](#delete-reminder)
+    - [Notification](#notification-from-app)
   - [AI Features](#ai-features-1)
   - [Search](#search-1)
   - [Empty States](#empty-states)
+  - [Snackbars](#snackbars)
 - [License](#license)
 
 ## Introduction
@@ -176,13 +178,16 @@ Password: 123456
 
 ### Reminders
 
-#### Setting Reminders
-![Setting Reminders](screenshots/Reminder.png)
-
+#### Set Time and Date
+![Set Date](screenshots/SetDate.png)
 ![Set Time](screenshots/SetTime.png)
 
+#### Setting Reminders
+![Setting Reminders](screenshots/Reminder.png)
 #### Delete Reminder
 ![Delete Reminder](screenshots/DeleteReminder.png)
+#### Notification from App
+![Notification](screenshots/Notification.png)
 
 ### AI Features
 ![AI Summary](screenshots/AIsummary.png)
@@ -197,11 +202,6 @@ Password: 123456
 
 #### Empty Folders
 ![Empty Folders](screenshots/EmptyFolders.png)
-
-### Reminders
-
-#### Notification from App
-![Notification](screenshots/Notification.png)
 
 ### Snackbars
 
