@@ -1,15 +1,15 @@
-// lib/models/note.dart
-
 class Note {
-  final int? id; // Nullable for new notes
+  // Define the properties of the Note class
+  final int? id;
   final String title;
   final String body;
   final String userId;
   final int? folderId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
-  bool hasReminder; // Changed from 'final' to mutable
+  bool hasReminder;
 
+  // Constructor for the Note class
   Note({
     this.id,
     required this.title,
@@ -21,6 +21,7 @@ class Note {
     this.hasReminder = false, // Provide default value
   });
 
+  // Factory constructor to create a Note instance from a map
   factory Note.fromMap(Map<String, dynamic> map) {
     return Note(
       id: map['id'] as int?,
@@ -38,6 +39,7 @@ class Note {
     );
   }
 
+  // Method to convert a Note instance to a map
   Map<String, dynamic> toMap() {
     final map = {
       'title': title,
