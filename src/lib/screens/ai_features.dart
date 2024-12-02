@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:/src/services/summarization_service.dart';
-import 'package:/src/services/suggestion_service.dart';
-import 'package:/src/services/ai_local_db_helper.dart';
+import 'package:src/services/summarization_service.dart';
+import 'package:src/services/suggestion_service.dart';
+import 'package:src/services/ai_local_db_helper.dart';
 
 class AiFeatures extends StatefulWidget {
   final String noteContent;
