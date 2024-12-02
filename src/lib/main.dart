@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'utils/constant.dart' as utils;
+import 'package:src/utils/constant.dart' as utils;
+import 'package:src/services/notification_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:src/screens/login_page.dart';
 import 'package:src/screens/home_screen.dart';
 import 'package:src/screens/signup_page.dart';
-import 'services/notification_service.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 Future<void> main() async {
@@ -23,7 +23,7 @@ Future<void> main() async {
   runApp(const MyApp());
 }
 
-final supabase = Supabase.instance.client;
+final supabase = Supabase.instance.client; // Supabase client instance
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -36,9 +36,9 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        initialRoute:
+        initialRoute: // Check if the user is authenticated
             utils.client.auth.currentSession != null ? '/home' : '/',
-        routes: {
+        routes: { // Define the routes
           '/': (context) => const LoginPage(),
           '/signup': (context) => const SignUpPage(),
           '/login': (context) => const LoginPage(),

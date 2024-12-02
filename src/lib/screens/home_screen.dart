@@ -1,23 +1,22 @@
-// lib/screens/home_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/folder.dart';
-import '../models/note.dart';
-import '../models/reminder.dart';
-import '../services/db_helper.dart';
-import 'note_editor.dart';
+import 'package:src/models/folder.dart';
+import 'package:src/models/note.dart';
+import 'package:src/models/reminder.dart';
+import 'package:src/services/db_helper.dart';
+import 'package:src/screens/note_editor.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({Key? key}) : super(key: key); // Constructor for HomeScreen
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Create an instance of the DBHelper class
   final DBHelper _dbHelper = DBHelper.instance();
   List<Note> _notes = [];
   List<Folder> _folders = [];
@@ -28,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
+  // Method to check if the user is authenticated
   void _checkAuth() {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
@@ -38,18 +38,20 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuth();
-    _searchController.addListener(_onSearchChanged);
-    _refreshFolderList();
-    _refreshNoteList();
+    _checkAuth(); // Check if the user is authenticated
+    _searchController.addListener(_onSearchChanged); // Listen for search changes
+    _refreshFolderList(); // Fetch folders when the widget is initialized
+    _refreshNoteList(); // Fetch notes when the widget is initialized
   }
 
+  // Dispose of the search controller
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
+  // Method to handle search changes
   void _onSearchChanged() {
     setState(() {
       _searchQuery = _searchController.text;
@@ -222,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   await _dbHelper.insertFolder(Folder(
                     id: DateTime.now().millisecondsSinceEpoch, // provide a unique id
                     name: folderName.trim(),
-                    userId: 'your_user_id', // replace with actual user id
+                    userId: 'your_user_id', // this will be replaced with actual user id
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
                   ));
@@ -507,8 +509,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Helper method to format timestamps
   String _formatTimestamp(String timestamp) {
-    DateTime noteTime =
-        DateTime.parse(timestamp).toLocal(); // Convert to local time
+    DateTime noteTime = DateTime.parse(timestamp).toLocal(); // Convert to local time
     DateTime now = DateTime.now();
     DateTime today = DateTime(now.year, now.month, now.day);
     DateTime yesterday = today.subtract(const Duration(days: 1));
@@ -594,6 +595,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Toggle reminder for a note
   Future<void> _toggleReminder(Note note) async {
     if (note.hasReminder) {
       bool? confirm = await showDialog<bool>(
@@ -614,6 +616,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
 
+      // Delete reminder if confirmed
       if (confirm == true) {
         try {
           await _dbHelper.deleteReminder(note.id!);
@@ -651,7 +654,7 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
       }
-    } else {
+    } else { // Add a new reminder
       DateTime? pickedDate = await showDatePicker(
         context: context,
         initialDate: DateTime.now().add(const Duration(minutes: 1)),
@@ -696,7 +699,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           String? location;
           if (addLocation == true) {
-            // Choose between manual entry or current location
+            // Prompt for location with loading indicator
             location = await _promptForLocation();
           }
 
@@ -753,6 +756,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Show date and time picker
   Future<DateTime?> showDateTimePicker(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -780,8 +784,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return null;
   }
 
+  // Prompt for location
   Future<String?> _promptForLocation() async {
     String? location;
+    
     await showDialog(
       context: context,
       builder: (context) {
@@ -792,14 +798,28 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               ElevatedButton(
                 onPressed: () async {
-                  // Get current location
+                  // Show loading dialog
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) {
+                      return Dialog(
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    },
+                  );
+
                   try {
-                    LocationPermission permission =
-                        await Geolocator.checkPermission();
-                    if (permission == LocationPermission.denied ||
+                    // Check location permissions
+                    LocationPermission permission = await Geolocator.checkPermission();
+                    if (permission == LocationPermission.denied || 
                         permission == LocationPermission.deniedForever) {
                       permission = await Geolocator.requestPermission();
-                      if (permission != LocationPermission.whileInUse &&
+                      if (permission != LocationPermission.whileInUse && 
                           permission != LocationPermission.always) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -814,18 +834,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
+                        Navigator.of(context).pop(); // Close loading dialog
                         return;
                       }
                     }
 
+                    // Get current position
                     Position position = await Geolocator.getCurrentPosition(
                         desiredAccuracy: LocationAccuracy.high);
 
-                    // (Optional) Convert position to address using Geocoding
-                    List<Placemark> placemarks = await GeocodingPlatform
-                        .instance!
-                        .placemarkFromCoordinates(
-                            position.latitude, position.longitude);
+                    // Convert position to address using Geocoding
+                    List<Placemark> placemarks = await placemarkFromCoordinates(
+                        position.latitude, position.longitude);
                     if (placemarks.isNotEmpty) {
                       Placemark placemark = placemarks.first;
                       location =
@@ -835,8 +855,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Lat: ${position.latitude}, Lon: ${position.longitude}';
                     }
 
-                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(); // Close loading dialog
+                    Navigator.of(context).pop(); // Close main dialog
                   } catch (e) {
+                    Navigator.of(context).pop(); // Close loading dialog
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -858,6 +880,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ElevatedButton(
                 onPressed: () async {
                   // Manual entry
+                  String? manualLocation;
                   TextEditingController controller = TextEditingController();
                   await showDialog(
                     context: context,
@@ -871,7 +894,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            location = controller.text;
+                            manualLocation = controller.text;
                             Navigator.of(context).pop();
                           },
                           child: const Text('OK'),
@@ -885,7 +908,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   );
-                  Navigator.of(context).pop();
+                  if (manualLocation != null && manualLocation!.isNotEmpty) {
+                    location = manualLocation;
+                    Navigator.of(context).pop(); // Close main dialog
+                  }
                 },
                 child: const Text('Enter Manually'),
               ),
@@ -946,6 +972,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
+    // Check if location permissions are permanently denied
     if (permission == LocationPermission.deniedForever) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -974,7 +1001,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: _isSearching
-            ? TextField(
+            ? TextField( // Search bar
                 controller: _searchController,
                 autofocus: true,
                 decoration: const InputDecoration(
@@ -993,7 +1020,7 @@ class _HomeScreenState extends State<HomeScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           _isSearching
-              ? IconButton(
+              ? IconButton( // Clear search query
                   icon: const Icon(Icons.clear),
                   onPressed: () {
                     setState(() {
@@ -1012,7 +1039,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                   },
                 ),
-          IconButton(
+          IconButton( // Logout button
             icon: const Icon(Icons.logout, color: Colors.white),
             onPressed: () {
               showDialog(
@@ -1022,7 +1049,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   content: const Text('Are you sure you want to log out?'),
                   actions: [
                     TextButton(
-                      onPressed: () {
+                      onPressed: () {// Sign out and navigate to login screen
                         Supabase.instance.client.auth.signOut();
                         Navigator.pushNamedAndRemoveUntil(
                           context,
@@ -1043,7 +1070,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      drawer: _buildDrawer(),
+      drawer: _buildDrawer(), // Drawer with folders
       body: _notes.isEmpty
           ? Center(
               child: Container(

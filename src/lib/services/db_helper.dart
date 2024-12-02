@@ -1,21 +1,21 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/note.dart';
-import '../models/folder.dart';
-import '../models/reminder.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:src/models/note.dart';
+import 'package:src/models/folder.dart';
+import 'package:src/models/reminder.dart';
+import 'package:src/services/notification_service.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'notification_service.dart';
 
 class DBHelper {
+  // Create a singleton instance of DBHelper
   final NotificationService _notificationService = NotificationService();
 
+  // Create a singleton instance of DBHelper
   static final DBHelper _instance = DBHelper._internal();
   factory DBHelper.instance() => _instance;
   DBHelper._internal();
 
-  final supabase = Supabase.instance.client;
+  final supabase = Supabase.instance.client; // Supabase client instance
 
   // SQLite Database instance
   static Database? _sqliteDatabase;
@@ -24,15 +24,11 @@ class DBHelper {
   Future<Database> get sqliteDatabase async {
     if (_sqliteDatabase != null) return _sqliteDatabase!;
 
-    // Platform-specific initialization
-    if (kIsWeb || Platform.isLinux || Platform.isMacOS || Platform.isWindows) {
-      databaseFactory = databaseFactoryFfi; // Use sqflite_common_ffi for web and desktop
-    }
-
     _sqliteDatabase = await _initSQLiteDB();
     return _sqliteDatabase!;
   }
 
+  // Initialize SQLite Database
   Future<Database> _initSQLiteDB() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'brainwave.db');
@@ -45,6 +41,7 @@ class DBHelper {
     );
   }
 
+  // Create the SQLite Database
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
@@ -57,6 +54,7 @@ class DBHelper {
     );
   }
 
+  // Create the SQLite Database
   Future _createDB(Database db, int version) async {
     try {
       await db.execute('''
@@ -70,12 +68,9 @@ class DBHelper {
     } catch (e) {
       print('Error creating credentials table: $e');
     }
-
-    // Create other tables if necessary
-    // Example:
-    // await db.execute('CREATE TABLE notes (...)');
   }
 
+  // Upgrade the SQLite Database
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       try {
@@ -91,11 +86,10 @@ class DBHelper {
         print('Error upgrading/creating credentials table: $e');
       }
     }
-    // Handle further migrations if needed
   }
 
   // ********** Notes CRUD Operations **********
-
+  // Insert a new note into the database
   Future<Note> insertNote(Note note) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
@@ -113,6 +107,7 @@ class DBHelper {
     }
   }
 
+  // Fetch notes from the database
   Future<List<Note>> getNotes({int? folderId}) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
@@ -135,6 +130,7 @@ class DBHelper {
     }
   }
 
+  // Update an existing note in the database
   Future<void> updateNote(Note note) async {
     await supabase.from('notes').update({
       'title': note.title,
@@ -152,10 +148,12 @@ class DBHelper {
         .eq('id', noteId);
   }
 
+  // Delete a note from the database
   Future<void> deleteNote(int id) async {
     await supabase.from('notes').delete().eq('id', id);
   }
 
+  // Fetch a note by its ID
   Future<Note?> getNoteById(int noteId) async {
     final response = await supabase
         .from('notes')
@@ -171,7 +169,7 @@ class DBHelper {
   }
 
   // ********** Folders CRUD Operations **********
-
+  // Insert a new folder into the database
   Future<void> insertFolder(Folder folder) async {
     final user = supabase.auth.currentUser;
     if (user != null) {
@@ -182,6 +180,7 @@ class DBHelper {
     }
   }
 
+  // Fetch folders from the database
   Future<List<Folder>> getFolders() async {
     final user = supabase.auth.currentUser;
     if (user != null) {
@@ -198,19 +197,21 @@ class DBHelper {
     }
   }
 
+  // Update an existing folder in the database
   Future<void> updateFolder(Folder folder) async {
     await supabase.from('folders').update({
       'name': folder.name,
     }).eq('id', folder.id);
   }
 
+  // Delete a folder from the database
   Future<void> deleteFolder(int id) async {
     await supabase.from('notes').delete().eq('folder_id', id);
     await supabase.from('folders').delete().eq('id', id);
   }
 
   // ********** Reminders CRUD Operations **********
-
+  // Fetch reminders from the database
   Future<void> insertReminder(Reminder reminder) async {
     await supabase.from('reminders').insert(reminder.toMap());
 
@@ -223,13 +224,14 @@ class DBHelper {
     );
   }
 
+  // Fetch reminders from the database
   Future<void> deleteReminder(int noteId) async {
     await supabase.from('reminders').delete().eq('note_id', noteId);
     await _notificationService.cancelNotification(noteId);
   }
 
   // ********** Credentials Operations with SQLite **********
-
+  // Save user credentials to SQLite
   Future<void> saveCredentials(String username, String password) async {
     final db = await sqliteDatabase;
 
@@ -239,7 +241,8 @@ class DBHelper {
     // Insert new credentials
     await db.insert('credentials', {'username': username, 'password': password});
   }
-
+  
+  // Fetch user credentials from SQLite
   Future<Map<String, String>?> getCredentials() async {
     final db = await sqliteDatabase;
     final result = await db.query('credentials', limit: 1);
@@ -253,6 +256,7 @@ class DBHelper {
     return null;
   }
 
+  // Delete user credentials from SQLite
   Future<void> deleteCredentials() async {
     final db = await sqliteDatabase;
     await db.delete('credentials');

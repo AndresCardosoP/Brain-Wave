@@ -1,8 +1,6 @@
-// src/lib/screens/folder_edit.dart
-
 import 'package:flutter/material.dart';
-import '../models/folder.dart';
-import '../services/db_helper.dart';
+import 'package:src/models/folder.dart';
+import 'package:src/services/db_helper.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Stateful widget for editing a folder
@@ -16,6 +14,7 @@ class FolderEdit extends StatefulWidget {
 }
 
 class _FolderEditState extends State<FolderEdit> {
+  // Create a global key for the form
   final _formKey = GlobalKey<FormState>();
   late String _folderName;
   final DBHelper _dbHelper = DBHelper.instance();
@@ -65,6 +64,7 @@ class _FolderEditState extends State<FolderEdit> {
         );
         return;
       }
+      // Create a new folder instance with the updated name
       Folder updatedFolder = Folder(
         id: widget.folder.id,
         name: _folderName.trim(),
@@ -113,6 +113,7 @@ class _FolderEditState extends State<FolderEdit> {
       return;
     }
 
+    // Show a confirmation dialog before deleting the folder
     bool? confirm = await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -138,6 +139,7 @@ class _FolderEditState extends State<FolderEdit> {
     }
   }
 
+  // Build the widget tree
   @override
   Widget build(BuildContext context) {
     return Scaffold(

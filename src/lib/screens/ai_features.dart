@@ -1,9 +1,7 @@
-// ai_features.dart
-
 import 'package:flutter/material.dart';
-import '../services/summarization_service.dart';
-import '../services/suggestion_service.dart';
-import '../services/ai_local_db_helper.dart';
+import 'package:src/services/summarization_service.dart';
+import 'package:src/services/suggestion_service.dart';
+import 'package:src/services/ai_local_db_helper.dart';
 
 class AiFeatures extends StatefulWidget {
   final String noteContent;
@@ -16,21 +14,25 @@ class AiFeatures extends StatefulWidget {
 }
 
 class _AiFeaturesState extends State<AiFeatures> {
+  // Create instances of the services and database helper
   final SummarizationService _summarizationService = SummarizationService();
   final SuggestionService _suggestionService = SuggestionService();
   final AiLocalDbHelper _dbHelper = AiLocalDbHelper();
 
+  // Define the properties for the summary and suggestions
   String _summary = '';
   List<String> _suggestions = [];
   bool _isLoadingSummary = false;
   bool _isLoadingSuggestions = false;
 
+  // Load AI data when the widget is initialized
   @override
   void initState() {
     super.initState();
     _loadAiData();
   }
 
+  // Load AI data from the database
   Future<void> _loadAiData() async {
     final data = await _dbHelper.getAiData(widget.noteId);
     if (data != null) {
@@ -43,6 +45,7 @@ class _AiFeaturesState extends State<AiFeatures> {
     }
   }
 
+  // Summarize the content of the note
   Future<void> _summarizeContent() async {
     setState(() {
       _isLoadingSummary = true;
@@ -74,6 +77,7 @@ class _AiFeaturesState extends State<AiFeatures> {
     }
   }
 
+  // Generate suggestions for the note content
   Future<void> _generateSuggestions() async {
     setState(() {
       _isLoadingSuggestions = true;
@@ -105,6 +109,7 @@ class _AiFeaturesState extends State<AiFeatures> {
     }
   }
 
+  // Clear AI data from the database
   Future<void> _clearAiData() async {
     await _dbHelper.deleteAiData(widget.noteId);
     setState(() {
@@ -126,6 +131,7 @@ class _AiFeaturesState extends State<AiFeatures> {
     );
   }
 
+  // Build the clear icon for the app bar
   Widget _buildClearIcon() {
     return IconButton(
       icon: Icon(Icons.clear),
@@ -134,12 +140,15 @@ class _AiFeaturesState extends State<AiFeatures> {
     );
   }
 
+  // Build the widget tree for the AI features screen
   @override
   Widget build(BuildContext context) {
+    // Check if the summary and suggestions are not empty
     bool _hasSummary = _summary.isNotEmpty;
     bool _hasSuggestions = _suggestions.isNotEmpty;
 
     return Scaffold(
+      // Create the app bar with the title and actions
       appBar: AppBar(
         title: const Text('AI Features'),
         backgroundColor: Colors.blue,

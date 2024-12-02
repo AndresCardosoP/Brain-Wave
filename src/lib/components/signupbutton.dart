@@ -1,7 +1,5 @@
-// Import the necessary Flutter material package
 import 'package:flutter/material.dart';
 
-// Define a stateless widget called SignUpButton
 class SignUpButton extends StatelessWidget {
   // Declare a final variable for the onTap function
   final Function()? onTap;

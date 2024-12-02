@@ -1,14 +1,14 @@
-// lib/models/reminder.dart
-
 class Reminder {
-  final int? id; // Unique identifier for the reminder
-  final int noteId; // Identifier for the associated note
-  final String userId; // Identifier for the user who created the reminder
-  final DateTime reminderTime; // Time when the reminder is set
-  final String? location; // Optional location for the reminder
-  final DateTime createdAt; // Timestamp when the reminder was created
-  final DateTime updatedAt; // Timestamp when the reminder was last updated
+  // Model class for a reminder
+  final int? id;
+  final int noteId;
+  final String userId;
+  final DateTime reminderTime;
+  final String? location;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
+  // Constructor for a reminder
   Reminder({
     this.id,
     required this.noteId,
@@ -19,6 +19,7 @@ class Reminder {
     required this.updatedAt,
   });
 
+  // Factory constructor to create a Reminder instance from a map
   factory Reminder.fromMap(Map<String, dynamic> map) {
     // Create a Reminder instance from a map
     return Reminder(
@@ -32,8 +33,8 @@ class Reminder {
     );
   }
 
+  // Method to convert a Reminder instance to a map
   Map<String, dynamic> toMap() {
-    // Convert a Reminder instance to a map
     return {
       'note_id': noteId,
       'user_id': userId,

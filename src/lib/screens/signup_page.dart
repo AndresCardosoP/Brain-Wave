@@ -1,4 +1,3 @@
-// Import necessary Flutter packages and custom components
 import 'package:flutter/material.dart';
 import 'package:src/components/textbox.dart';
 import 'package:src/components/button.dart';

@@ -1,13 +1,12 @@
-// Define the Folder class
 class Folder {
-  // Declare the properties of the Folder class
+  // Declare the properties of the Folder
   final int id;
   final String name;
   final String userId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  // Constructor for the Folder class
+  // Constructor for the Folder
   Folder({
     required this.id,
     required this.name,

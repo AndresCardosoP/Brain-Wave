@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/note.dart';
-import '../models/folder.dart';
-import '../services/db_helper.dart';
+import 'package:src/models/note.dart';
+import 'package:src/models/folder.dart';
+import 'package:src/services/db_helper.dart';
+import 'package:src/screens/ai_features.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'ai_features.dart';
 
-// ignore: must_be_immutable
 class NoteEditor extends StatefulWidget {
   Note? note; // If null, this is a new note
   final int? initialFolderId; // Current folder ID
@@ -17,9 +16,11 @@ class NoteEditor extends StatefulWidget {
 }
 
 class _NoteEditorState extends State<NoteEditor> {
+  // Create a global key for the form
   final _formKey = GlobalKey<FormState>();
   final DBHelper _dbHelper = DBHelper.instance();
 
+  // Create text controllers for the title and content
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
 
@@ -32,12 +33,13 @@ class _NoteEditorState extends State<NoteEditor> {
   @override
   void initState() {
     super.initState();
-    _titleController.text = widget.note?.title ?? '';
-    _contentController.text = widget.note?.body ?? '';
-    _selectedFolderId = widget.note?.folderId ?? widget.initialFolderId;
+    _titleController.text = widget.note?.title ?? ''; // Initialize title controller
+    _contentController.text = widget.note?.body ?? ''; // Initialize content controller
+    _selectedFolderId = widget.note?.folderId ?? widget.initialFolderId; // Initialize folder ID
     _loadFoldersFromDb();
   }
 
+  // Dispose of the text controllers
   @override
   void dispose() {
     _titleController.dispose();
@@ -311,15 +313,6 @@ Provide a brief description or introduction about the $templateType.
                     border: InputBorder.none,
                   ),
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  // Remove or comment out the validator
-                  /*
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a title';
-                    }
-                    return null;
-                  },
-                  */
                 ),
               ),
               const Divider(color: Colors.grey, height: 0.5, thickness: 0.2),

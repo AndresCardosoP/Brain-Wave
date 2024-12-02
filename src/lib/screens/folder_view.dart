@@ -1,10 +1,8 @@
-// lib/screens/folder_view.dart
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../screens/note_editor.dart';
-import '../models/note.dart';
-import '../services/db_helper.dart';
+import 'package:src/screens/note_editor.dart';
+import 'package:src/models/note.dart';
+import 'package:src/services/db_helper.dart';
 
 // Stateful widget to display notes in a folder
 class FolderView extends StatefulWidget {
@@ -17,6 +15,7 @@ class FolderView extends StatefulWidget {
 }
 
 class _FolderViewState extends State<FolderView> {
+  // Create an instance of the DBHelper class
   final DBHelper _dbHelper = DBHelper.instance();
   List<Note> _notes = [];
 
@@ -46,6 +45,7 @@ class _FolderViewState extends State<FolderView> {
       return;
     }
     try {
+      // Fetch notes for the current folder
       List<Note> notes = await _dbHelper.getNotes(folderId: widget.currentFolderId);
       setState(() {
         _notes = notes;
@@ -67,6 +67,7 @@ class _FolderViewState extends State<FolderView> {
     }
   }
 
+  // Build the widget tree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
