@@ -24,16 +24,13 @@
   - [Authentication](#authentication)
     - [Login Page](#login-page)
     - [Sign Up](#sign-up)
-    - [Sign In](#sign-in)
   - [Notes](#notes-1)
     - [Creating a Note](#creating-a-note-1)
     - [Editing a Note](#editing-a-note-1)
-    - [Empty Note](#empty-note)
   - [Folders](#folders-1)
     - [Managing Folders](#managing-folders-1)
     - [Folder Features](#folder-features)
     - [Folder Picker](#folder-picker)
-    - [One Folder View](#one-folder-view)
   - [Reminders](#reminders-1)
     - [Setting Reminders](#setting-reminders-1)
     - [Delete Reminder](#delete-reminder)
@@ -84,7 +81,7 @@ To install and run the application, follow these steps:
 1. **Clone the repository:**
    ```sh
    git clone https://github.com/HarshPanchal01/BrainWave.git
-   cd brainwave
+   cd BrainWave
 2. **Run the application:**
     ```sh
     cd src
