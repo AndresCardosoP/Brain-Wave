@@ -696,7 +696,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           String? location;
           if (addLocation == true) {
-            // Choose between manual entry or current location
+            // Prompt for location with loading indicator
             location = await _promptForLocation();
           }
 
@@ -782,6 +782,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<String?> _promptForLocation() async {
     String? location;
+    
     await showDialog(
       context: context,
       builder: (context) {
@@ -792,14 +793,28 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               ElevatedButton(
                 onPressed: () async {
-                  // Get current location
+                  // Show loading dialog
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) {
+                      return Dialog(
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    },
+                  );
+
                   try {
-                    LocationPermission permission =
-                        await Geolocator.checkPermission();
-                    if (permission == LocationPermission.denied ||
+                    // Check location permissions
+                    LocationPermission permission = await Geolocator.checkPermission();
+                    if (permission == LocationPermission.denied || 
                         permission == LocationPermission.deniedForever) {
                       permission = await Geolocator.requestPermission();
-                      if (permission != LocationPermission.whileInUse &&
+                      if (permission != LocationPermission.whileInUse && 
                           permission != LocationPermission.always) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -814,18 +829,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
+                        Navigator.of(context).pop(); // Close loading dialog
                         return;
                       }
                     }
 
+                    // Get current position
                     Position position = await Geolocator.getCurrentPosition(
                         desiredAccuracy: LocationAccuracy.high);
 
-                    // (Optional) Convert position to address using Geocoding
-                    List<Placemark> placemarks = await GeocodingPlatform
-                        .instance!
-                        .placemarkFromCoordinates(
-                            position.latitude, position.longitude);
+                    // Convert position to address using Geocoding
+                    List<Placemark> placemarks = await placemarkFromCoordinates(
+                        position.latitude, position.longitude);
                     if (placemarks.isNotEmpty) {
                       Placemark placemark = placemarks.first;
                       location =
@@ -835,8 +850,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Lat: ${position.latitude}, Lon: ${position.longitude}';
                     }
 
-                    Navigator.of(context).pop();
+                    Navigator.of(context).pop(); // Close loading dialog
+                    Navigator.of(context).pop(); // Close main dialog
                   } catch (e) {
+                    Navigator.of(context).pop(); // Close loading dialog
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -858,6 +875,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ElevatedButton(
                 onPressed: () async {
                   // Manual entry
+                  String? manualLocation;
                   TextEditingController controller = TextEditingController();
                   await showDialog(
                     context: context,
@@ -871,7 +889,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       actions: [
                         TextButton(
                           onPressed: () {
-                            location = controller.text;
+                            manualLocation = controller.text;
                             Navigator.of(context).pop();
                           },
                           child: const Text('OK'),
@@ -885,7 +903,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   );
-                  Navigator.of(context).pop();
+                  if (manualLocation != null && manualLocation!.isNotEmpty) {
+                    location = manualLocation;
+                    Navigator.of(context).pop(); // Close main dialog
+                  }
                 },
                 child: const Text('Enter Manually'),
               ),
