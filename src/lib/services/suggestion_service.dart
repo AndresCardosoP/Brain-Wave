@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class SuggestionService {
-  static const String apiKey = 'yRULgDEK0KO8nv0pDxIOjpXokijK1KlgodyLLdSi';
+  static const String apiKey = 'YOUR-API-KEY-HERE';
   static const String apiUrl = 'https://api.cohere.ai/generate';
 
   Future<List<String>> generateSuggestions(String text) async {
