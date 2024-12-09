@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 // A service class for summarizing text using OpenAI's API
 class SummarizationService {
   // API key for authenticating with OpenAI's service
-  static const String apiKey = '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';
+  static const String apiKey = 'YOUR-API-KEY-HERE';
 
   // URL endpoint for OpenAI's chat completions API
   static const String apiUrl = 'https://api.openai.com/v1/chat/completions';
