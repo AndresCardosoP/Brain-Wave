@@ -70,7 +70,6 @@ BrainWave is a versatile note-taking application designed to help you organize y
 ### Search
 - Search for notes within a folder using the search bar.
 - Quickly find notes by entering keywords.
-- A logout icon is available beside the search bar for easy logout.
 
 ## Getting Started
 
@@ -86,8 +85,8 @@ To install and run the application, follow these steps:
     ```sh
     cd src
     flutter clean && flutter pub get # Install dependencies
-    flutter run
-> **Note:** You must have flutter installed to run the application, follow this documentation if needed: https://docs.flutter.dev/get-started/install
+    flutter build apk && flutter install # Build the apk then install on the android device
+> **Note:** You must have flutter and atleast one android emulator installed, or a physical android phone to run the application, follow this documentation if needed: https://docs.flutter.dev/get-started/install
 
 ### Login Page
 The login page allows users with existing accounts to authenticate by entering 
