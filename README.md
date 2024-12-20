@@ -17,6 +17,7 @@
   - [Editing a Note](#editing-a-note)
   - [Managing Folders](#managing-folders)
   - [Setting Reminders](#setting-reminders)
+  - [Using AI Features](#using-ai-features)
 - [Deleting Content](#deleting-content)
   - [Deleting Notes](#deleting-notes)
   - [Deleting Folders](#deleting-folders)
@@ -131,6 +132,11 @@ Password: 123456
 1. To add a reminder to a note, tap on the **bell** icon.
 2. Pick the desired **date and time** for the reminder.
 3. The bell icon will turn **blue** to indicate an active reminder.
+
+### Using AI Features
+1. While editing or creating a note, tap on the **magic wand** icon, to generate a template for your note.
+2. Tap on the **robot** icon to move to the AI features screen.
+3. From the new screen you can either summarize the content in the note, or you can get new suggestions on what to add.
 
 ## Deleting Content
 
