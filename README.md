@@ -10,9 +10,9 @@
   - [Search](#search)
 - [Getting Started](#getting-started)
   - [Installation](#installation)
+- [Usage](#usage)
   - [Login Page](#login-page)
   - [Sign Up](#sign-up)
-- [Usage](#usage)
   - [Creating a Note](#creating-a-note)
   - [Editing a Note](#editing-a-note)
   - [Managing Folders](#managing-folders)
@@ -82,12 +82,26 @@ To install and run the application, follow these steps:
    ```sh
    git clone https://github.com/HarshPanchal01/BrainWave.git
    cd BrainWave
-2. **Run the application:**
+2. **Configure Supabase:**
+   - Create a Supabase project ([Supabase Documentation](https://supabase.com/docs)).
+   - Copy the ```anonKey``` and ```url``` for your project.
+   - Open the ```src/main.dart``` file and paste the ```anonKey``` and ```url``` into the fields labeled for Supabase configuration.
+3. **Setup the Database:**
+   - Navigate to the ```design``` folder.
+   - Copy the ```supabase_table_creation.sql``` script.
+   - Paste and execute the script on your Supabase project through the ```SQL Editor```.
+4. **(Optional) Enable AI Features:**
+   - Generate an ```OpenAI``` and ```Cohere``` api key.
+   - Navigate to ```src/lib/services``` folder.
+   - Open ```suggestion_service.dart``` and ```summarization_service.dart```, then paste the keys into the respective placeholders. 
+5. **Run the application:**
     ```sh
     cd src
     flutter clean && flutter pub get # Install dependencies
     flutter build apk && flutter install # Build the apk then install on the android device
-> **Note:** You must have flutter and atleast one android emulator installed, or a physical android phone to run the application, follow this documentation if needed: https://docs.flutter.dev/get-started/install
+> **Note:** You must have flutter and atleast one android emulator installed, or a physical android phone to run the application, follow this documentation if needed: [Flutter Documentation](https://docs.flutter.dev/get-started/install)
+
+## Usage
 
 ### Login Page
 The login page allows users with existing accounts to authenticate by entering 
@@ -105,12 +119,6 @@ password and confirmation match; otherwise, a snackbar will display an error mes
 indicating a mismatch. Furthermore, attempting to register with an email already in 
 use will prompt a snackbar error message indicating that the email is already 
 associated with an existing account.
-
-## Usage
-
-### Account to Test App
-Email: user@testuser.com <br/> 
-Password: 123456
 
 ### Creating a Note
 1. Tap on the **`+`** button to create a new note.
