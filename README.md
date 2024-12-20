@@ -221,9 +221,9 @@ associated with an existing account.
 ![Deleted Reminder](screenshots/SBreminderDeleted.png)
 #### Email Already in Use
 ![Email Already in Use](screenshots/SBuserExists.png)
-#### Inccorect Login Information
+#### Incorrect Login Information
 ![Inccorect Login Information](screenshots/SBinvalidLogin.png)
-#### Deleted Forlder
+#### Deleted Folder
 ![Deleted Forlder](screenshots/SBdeletedFolder.png)
 #### Deleted Note
 ![Deleted Note](screenshots/SBnoteDeleted.png)
